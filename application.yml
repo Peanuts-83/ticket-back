@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ticketdb
+    username: ticket
+    password: ticket
+  jpa:
+    hibernate:
+      ddl-auto: update    # dev mode only - for prod use: validate
+    show-sql: true        # display hibernate output
+    open-in-view: false   # avoid JPA bug
