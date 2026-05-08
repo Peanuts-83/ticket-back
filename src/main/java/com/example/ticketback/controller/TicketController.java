@@ -1,4 +1,4 @@
-package com.example.ticketback.controler;
+package com.example.ticketback.controller;
 
 import com.example.ticketback.dto.TicketDto;
 import com.example.ticketback.domain.Ticket;
@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/tickets")
 @RequiredArgsConstructor
-public class TicketControler {
+public class TicketController {
 
     private TicketService ticketService;
 
     @GetMapping
-    public Page<Ticket> list(@RequestParam TicketStatus status, Pageable pageable) {
+    public Page<TicketDto> list(@RequestParam TicketStatus status, Pageable pageable) {
         return ticketService.list(status, pageable);
     }
 

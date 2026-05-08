@@ -1,4 +1,4 @@
-package com.example.ticketback.controler;
+package com.example.ticketback.controller;
 
 import com.example.ticketback.domain.User;
 import com.example.ticketback.service.UserService;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/users")
-public class UserControler {
+public class UserController {
     private UserService userService;
 
     @Autowired

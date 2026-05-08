@@ -17,7 +17,7 @@ public class TicketService {
 
     private final TicketRepository ticketRepository;
 
-    public Page<Ticket> list(TicketStatus status, Pageable pageable) {
+    public Page<TicketDto> list(TicketStatus status, Pageable pageable) {
         return ticketRepository
                 .findByStatus(status, pageable)
                 .map(TicketDto::fromEntity);

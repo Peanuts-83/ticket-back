@@ -32,3 +32,8 @@
 
 - Csrf
 - JWT
+
+### DB
+
+- H2 en mémoire (dev) 
+- Chargement auto d'un jeu de données (data-dev.sql)
