@@ -1,8 +1,10 @@
 package com.example.ticketback.domain.enums;
 
 public enum TicketStatus {
-    OPEN,
+    NEW,
     IN_PROGRESS,
-    DONE,
-    CLOSED
+    CLOSED,
+    TESTED_OK,
+    TESTED_KO,
+    DONE
 }

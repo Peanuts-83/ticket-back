@@ -2,11 +2,11 @@ package com.example.ticketback.dto.common;
 
 /**
  * Paramètres génériques pour les appels de liste
- * @param PageNum
+ * @param pageNum
  * @param nb nombre de lignes
  */
 public record BaseHttpParamList(
-        Integer PageNum,
+        Integer pageNum,
         Integer nb
 ) {
 
@@ -18,7 +18,7 @@ public record BaseHttpParamList(
      * @return la page demandée ou 0
      */
     public int resolvedPageNum() {
-        return PageNum != null ? PageNum : 0;
+        return pageNum != null ? pageNum : 0;
     }
 
     /**

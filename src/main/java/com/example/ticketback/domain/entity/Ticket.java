@@ -24,6 +24,6 @@ public class Ticket {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TicketStatus status = TicketStatus.OPEN;
+    private TicketStatus status = TicketStatus.NEW;
 
 }

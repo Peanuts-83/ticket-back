@@ -129,6 +129,7 @@ Bonne pratique retenue :
 - Injection par constructeur.
 - Un seul constructeur par service/controller dans la majorité des cas.
 - Champs `final` pour les dépendances.
+- C'est le constructeur qui construit HttpPostResult avec le retour des services (DTO).
 
 Exemple attendu :
 
@@ -154,11 +155,6 @@ public class UserService {
     private final UserRepository userRepository;
 }
 ```
-
-Décision à prendre :
-
-- Soit constructeurs explicites pour pédagogie / lisibilité.
-- Soit `@RequiredArgsConstructor` pour réduire le boilerplate.
 
 ---
 
@@ -310,6 +306,16 @@ GET /api/user/metaCreate
 POST /api/user/create
 ```
 
+#### Sémantique actuelle de la réponse API
+
+Le wrapper générique `HttpPostResult<T>` contient désormais :
+
+```java
+T data;                     // valeurs des champs
+Map<String, Meta> metas;    // métadonnées techniques de chaque champ
+Long nb;                    // nombre de lignes remontées dans le bean pour les listes
+```
+
 ---
 
 ## 8. Remarque sur le style REST
@@ -398,14 +404,13 @@ export interface HttpPostResult<T> {
 
 ---
 
-## 10. Traduction probable côté Java
-
-À prévoir côté back Java :
+## 10. Traduction côté Java
 
 ### Enum `ViewDataType`
 
 ```java
 public enum ViewDataType {
+    TYPE_SELECT,
     LISTE,
     UPDATE,
     CREATE
@@ -494,6 +499,16 @@ public record HttpPostResult<T>(
 }
 ```
 
+### Le contrat API générique repose sur les classes contenues dans :
+
+```text
+src/main/java/com/example/ticketback/dto/common/
+```
+
+Un metaBuilder permet de générer automatiquement les métadonnées techniques de chaque champ en se basant sur le DTO fourni. 
+
+Une annotation @MetaField permet de compléter les métadonnées.
+
 ---
 
 ## 11. Payloads `create` et `update`
@@ -530,7 +545,8 @@ Exemple création user :
   "data": {
     "username": "admin",
     "email": "admin@ticketflow.local",
-    "password": "password"
+    "password": "password",
+    "role": "ADMIN"
   }
 }
 ```
@@ -757,10 +773,6 @@ Configuration CORS à prévoir côté Spring Security / WebMvc :
 
 ## 17. Services et bases abstraites côté back
 
-TODO demandé :
-
-> Mettre en place les services et constructeurs de base pour pouvoir démarrer le back et connecter le front.
-
 Cible possible :
 
 ```text
@@ -788,27 +800,7 @@ Point d’attention :
 
 Pour éviter d’exposer directement les entités JPA au front, prévoir des DTOs.
 
-Pour `User` :
-
-```text
-UserDto
-UserListDto
-UserCreateDto
-UserUpdateDto
-UserCreateMetaDto
-```
-
-Possibilité de commencer minimalement avec :
-
-```text
-UserDto
-UserCreateDto
-UserUpdateDto
-```
-
-Puis enrichir.
-
----
+FAIT.
 
 ## 19. Feature tickets côté back
 
@@ -864,7 +856,7 @@ Fonctionnalités futures :
 - `HttpPostResult<T>`
 - éventuellement `HttpPostPayload<T>`
 
-### TODO 3 — Implémenter User minimal
+### TODO 3 — Implémenter User minimal - DONE &#x2714;
 
 - Entity `User`.
 - Repository `UserRepository`.
@@ -887,13 +879,17 @@ Fonctionnalités futures :
 - `Authorization: Bearer <accessToken>`.
 - Décider refresh token ou pas côté front.
 
-### TODO 6 — Connecter le front
+### TODO 6 — Documentation
+
+- Mettre en place une documentation auto type Swagger
+
+### TODO 7 — Connecter le front
 
 - Vérifier CORS.
 - Aligner les URLs avec le `baseUrl interceptor` front.
 - Tester login/register ou user/create selon stratégie.
 
-### TODO 7 — Tests back
+### TODO 8 — Tests back
 
 À prévoir :
 
