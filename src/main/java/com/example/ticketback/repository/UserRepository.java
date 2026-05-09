@@ -1,6 +1,6 @@
 package com.example.ticketback.repository;
 
-import com.example.ticketback.domain.User;
+import com.example.ticketback.domain.entity.User;
 import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 

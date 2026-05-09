@@ -1,7 +1,7 @@
-package com.example.ticketback.dto;
+package com.example.ticketback.dto.ticket;
 
-import com.example.ticketback.domain.Ticket;
-import com.example.ticketback.domain.TicketStatus;
+import com.example.ticketback.domain.entity.Ticket;
+import com.example.ticketback.domain.enums.TicketStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

@@ -1,6 +1,5 @@
 package com.example.ticketback.security;
 
-import com.example.ticketback.domain.Role;
 import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -68,7 +67,7 @@ public class SecurityConfig {
 
         // Méthodes HTTP autorisées
         configuration.setAllowedOrigins(List.of(
-                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+                "GET", "POST", "DELETE"
         ));
 
         // Headers autorisés pour la requête

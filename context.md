@@ -64,16 +64,19 @@ src/main/java/com/example/ticketback/
 ├── TicketBackApplication.java
 │
 ├── controller/
-│   └── UserController.java
 │
 ├── domain/
-│   └── User.java
+│   └── entity/
+│   └── enum/
+│
+├── dto/
+│   └── common/
+│   └── user/
+│   └── ticket/
 │
 ├── service/
-│   └── UserService.java
 │
 ├── repository/
-│   └── UserRepository.java
 │
 └── security/
     └── classe(s) de configuration sécurité
@@ -733,10 +736,7 @@ Méthodes autorisées :
 ```text
 GET
 POST
-PUT
-PATCH
 DELETE
-OPTIONS
 ```
 
 Headers autorisés :
@@ -856,7 +856,7 @@ Fonctionnalités futures :
 - Vérifier imports `jakarta.persistence`.
 - Vérifier profils H2/PostgreSQL.
 
-### TODO 2 — Stabiliser le contrat API générique
+### TODO 2 — Stabiliser le contrat API générique - DONE &#x2714;
 
 - `BaseHttpParams`
 - `BaseHttpParamList`

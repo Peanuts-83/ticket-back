@@ -1,6 +1,6 @@
 package com.example.ticketback.controller;
 
-import com.example.ticketback.domain.User;
+import com.example.ticketback.domain.entity.User;
 import com.example.ticketback.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

@@ -1,8 +1,8 @@
 package com.example.ticketback.service;
 
-import com.example.ticketback.dto.TicketDto;
-import com.example.ticketback.domain.Ticket;
-import com.example.ticketback.domain.TicketStatus;
+import com.example.ticketback.dto.ticket.TicketDto;
+import com.example.ticketback.domain.entity.Ticket;
+import com.example.ticketback.domain.enums.TicketStatus;
 import com.example.ticketback.repository.TicketRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

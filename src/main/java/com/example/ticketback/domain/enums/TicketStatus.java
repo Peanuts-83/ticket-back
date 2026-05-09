@@ -1,4 +1,4 @@
-package com.example.ticketback.domain;
+package com.example.ticketback.domain.enums;
 
 public enum TicketStatus {
     OPEN,

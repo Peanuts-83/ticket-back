@@ -1,5 +1,6 @@
-package com.example.ticketback.domain;
+package com.example.ticketback.domain.entity;
 
+import com.example.ticketback.domain.enums.Role;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

@@ -1,6 +1,6 @@
 package com.example.ticketback.service;
 
-import com.example.ticketback.domain.User;
+import com.example.ticketback.domain.entity.User;
 import com.example.ticketback.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.NonNull;
