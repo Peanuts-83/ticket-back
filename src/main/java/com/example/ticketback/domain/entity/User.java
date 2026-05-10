@@ -40,6 +40,6 @@ public class User {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.role = role != null ? role : Role.USER;
+        this.role = role != null ? role : Role.ROLE_USER;
     }
 }

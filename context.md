@@ -67,7 +67,7 @@ src/main/java/com/example/ticketback/
 │
 ├── domain/
 │   └── entity/
-│   └── enum/
+│   └── enums/
 │
 ├── dto/
 │   └── common/
@@ -263,6 +263,7 @@ GET  /api/user/getUpdate/{id}
 POST /api/user/update
 GET  /api/user/metaCreate
 POST /api/user/create
+DELETE /api/user/delete
 ```
 
 ### Endpoints contextuels si besoin
@@ -323,11 +324,11 @@ Long nb;                    // nombre de lignes remontées dans le bean pour les
 Le modèle choisi n’est pas un REST pur classique du type :
 
 ```http
-GET    /api/users/{id}
-GET    /api/users
-POST   /api/users
-PUT    /api/users/{id}
-DELETE /api/users/{id}
+GET    /api/user/{id}
+GET    /api/user
+POST   /api/user
+PUT    /api/user/{id}
+DELETE /api/user/{id}
 ```
 
 Il s’agit plutôt d’un style **API applicative / action-based**, proche de certains back-office d’entreprise.
@@ -546,7 +547,7 @@ Exemple création user :
     "username": "admin",
     "email": "admin@ticketflow.local",
     "password": "password",
-    "role": "ADMIN"
+    "role": "ROLE_ADMIN"
   }
 }
 ```
@@ -611,6 +612,11 @@ public class UserController {
     public HttpPostResult<UserDto> create(@RequestBody HttpPostPayload<UserCreateDto> payload) {
         return HttpPostResult.of(userService.create(payload.data()));
     }
+
+    @PostMapping("/delete")
+    public HttpPostResult<Long> delete(@RequestBody Long id) {
+        return HttpPostResult.of(userService.delete(id));
+    }
 }
 ```
 
@@ -635,6 +641,7 @@ Fonctionnalités validées :
 - console H2 accessible publiquement en dev ;
 - CORS fonctionnel pour Angular local ;
 - preflight `OPTIONS` autorisé ;
+- Validation d'accès avec @EnableMethodSecurity en config et @PreAuthorize dans le service;
 - configuration stateless préparée pour JWT.
 
 ### TODO principal
@@ -648,27 +655,24 @@ Authentification locale username/password -> génération accessToken JWT -> val
 ```
 
 
-### Endpoints probablement publics
-
-À prévoir :
+### Endpoints publics
 
 ```http
 POST /api/auth/login
-POST /api/auth/register
 GET  /api/user/metaCreate
 POST /api/user/create
 ```
 
-À discuter :
 
-- `POST /api/user/create` est-il public ou réservé admin ?
-- Pour une création de compte depuis la landing, il faudrait plutôt exposer :
+### Endpoints privés (authenticated OWNER ou ADMIN)
 
 ```http
-POST /api/auth/register
+POST /api/admin/**              # réservé ADMIN
+POST /api/user/getList          # réservé ADMIN
+GET  /api/user/getUpdate/:id
+POST /api/user/update
+DELETE /api/user/delete/:id
 ```
-
-plutôt que `POST /api/user/create`, sauf si `user/create` est explicitement utilisé comme création de compte.
 
 ---
 
@@ -706,8 +710,6 @@ Authorization: Bearer <accessToken>
 
 ## 15. Proposition de filterChain cible
 
-Objectif : démarrer simplement, puis durcir progressivement.
-
 Exemple conceptuel :
 
 ```java
@@ -728,11 +730,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 }
 ```
 
-À adapter selon :
-
-- H2 console en dev uniquement.
-- CORS avec Angular local.
-- Mise en place réelle du filtre JWT.
+2 Configurations distinctes sont implémentées: DEV et PROD.
 
 ---
 
@@ -753,6 +751,7 @@ Méthodes autorisées :
 GET
 POST
 DELETE
+OPTIONS
 ```
 
 Headers autorisés :
@@ -864,7 +863,7 @@ Fonctionnalités futures :
 - Controller `UserController` avec endpoints conventionnés.
 - DTOs minimaux.
 
-### TODO 4 — Avancer sur security / filterChain
+### TODO 4 — Avancer sur security / filterChain - DONE &#x2714;
 
 - `SecurityFilterChain`.
 - Endpoints publics.

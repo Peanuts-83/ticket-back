@@ -14,6 +14,7 @@ import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.awt.print.Pageable;
@@ -51,11 +52,13 @@ public class UserService {
                 .toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#id)")
     public UserUpdateDto getUpdate(Long id) {
         User user = findUserOrThrow(id);
         return toUpdateDto(user);
     }
 
+    @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#dto.id()")
     public UserDto update(UserUpdateDto dto) {
         if (dto == null || dto.id() == null) {
             throw new IllegalArgumentException("User id is required for update");
@@ -89,10 +92,23 @@ public class UserService {
                 dto.userName(),
                 dto.email(),
                 dto.password(),
-                dto.role() != null ? dto.role() : Role.USER
+                dto.role() != null ? dto.role() : Role.ROLE_USER
         );
         User savedUser = userRepository.save(user);
         return toDto(savedUser);
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#id)")
+    public Long delete(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("User id is required for delete");
+        }
+        // check de l'existant
+        if (!userRepository.existsById(id)) {
+            throw new IllegalArgumentException("User not found with id " + id);
+        }
+        userRepository.deleteById(id);
+        return id;
     }
 
 

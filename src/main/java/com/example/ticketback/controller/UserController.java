@@ -22,7 +22,7 @@ public class UserController {
     public UserController(UserService userService) {
         this.userService = userService;
     }
-
+    // TODO: pas utile? a virer a terme
     @GetMapping("/get/{id}")
     public HttpPostResult<UserDto> get(@PathVariable Long id) {
         return HttpPostResult.of(userService.get(id));
@@ -52,5 +52,10 @@ public class UserController {
     @PostMapping("/create")
     public HttpPostResult<UserDto> create(@RequestBody UserCreateDto payload) {
         return HttpPostResult.of(userService.create(payload));
+    }
+
+    @PostMapping("/delete")
+    public HttpPostResult<Long> delete(@RequestBody Long id) {
+        return HttpPostResult.of(userService.delete(id));
     }
 }
