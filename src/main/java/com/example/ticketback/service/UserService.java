@@ -3,22 +3,17 @@ package com.example.ticketback.service;
 import com.example.ticketback.domain.entity.User;
 import com.example.ticketback.domain.enums.Role;
 import com.example.ticketback.dto.common.BaseHttpParams;
-import com.example.ticketback.dto.common.HttpPostResult;
 import com.example.ticketback.dto.user.UserCreateDto;
 import com.example.ticketback.dto.user.UserDto;
-import com.example.ticketback.dto.user.UserMetaCreateDto;
 import com.example.ticketback.dto.user.UserUpdateDto;
 import com.example.ticketback.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import lombok.NonNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
-import java.awt.print.Pageable;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -26,14 +21,10 @@ import java.util.List;
  * read/create/update et mapping Entity <-> DTO
  */
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final UserRepository userRepository;
 
     public UserDto get(Long id) {
         User user = findUserOrThrow(id);
@@ -92,7 +83,7 @@ public class UserService {
                 dto.userName(),
                 dto.email(),
                 dto.password(),
-                dto.role() != null ? dto.role() : Role.ROLE_USER
+                dto.role() != null ? dto.role() : Role.USER
         );
         User savedUser = userRepository.save(user);
         return toDto(savedUser);

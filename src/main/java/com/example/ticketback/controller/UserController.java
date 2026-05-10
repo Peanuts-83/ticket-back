@@ -1,27 +1,22 @@
 package com.example.ticketback.controller;
 
-import com.example.ticketback.domain.entity.User;
 import com.example.ticketback.dto.common.BaseHttpParams;
 import com.example.ticketback.dto.common.HttpPostResult;
 import com.example.ticketback.dto.user.UserCreateDto;
 import com.example.ticketback.dto.user.UserDto;
-import com.example.ticketback.dto.user.UserMetaCreateDto;
 import com.example.ticketback.dto.user.UserUpdateDto;
 import com.example.ticketback.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
+@RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
     // TODO: pas utile? a virer a terme
     @GetMapping("/get/{id}")
     public HttpPostResult<UserDto> get(@PathVariable Long id) {

@@ -1,6 +1,8 @@
 package com.example.ticketback.security;
 
 import com.example.ticketback.domain.enums.Role;
+import com.example.ticketback.security.jwt.JwtAuthentificationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -12,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -24,8 +27,11 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@Profile("!dev")
+@RequiredArgsConstructor
+@Profile("prod")
 public class SecurityConfig {
+    private final JwtAuthentificationFilter jwtAuthenticationFilter;
+
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -43,12 +49,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/user/update").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/user/delete/{id}").authenticated()
                         // accès admin
-                        .requestMatchers(HttpMethod.POST, "/api/user/getList").hasRole(Role.ROLE_ADMIN.name())
-                        .requestMatchers("/api/admin/**").hasRole(Role.ROLE_ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "/api/user/getList").hasRole(Role.ADMIN.name())
+                        .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated()
-                );
-//                .oauth2ResourceServer(oauth -> oauth.jwt());
-
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

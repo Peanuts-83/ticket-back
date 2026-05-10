@@ -31,3 +31,6 @@ build/
 ### Md ###
 HELP.md
 entretien.md
+
+### Security ###
+.env

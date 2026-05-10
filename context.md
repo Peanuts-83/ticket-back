@@ -27,6 +27,7 @@ Objectifs techniques principaux :
 - ORM / persistance : **JPA / Hibernate**
 - Réduction boilerplate : **Lombok**
 - Sécurité : **Spring Security** en cours de construction
+- JWT : **JJWT 0.12.6**
 - Base de données dev : **H2**
 - Base de données cible prod : **PostgreSQL**
 
@@ -79,7 +80,20 @@ src/main/java/com/example/ticketback/
 ├── repository/
 │
 └── security/
-    └── classe(s) de configuration sécurité
+    ├── auth/
+    │   ├── AuthController.java
+    │   └── models/
+    │       ├── LoginRequest.java
+    │       └── LoginResponse.java
+    │
+    ├── jwt/
+    │   ├── JwtService.java
+    │   ├── JwtProperties.java
+    │   └── JwtAuthentificationFilter.java
+    │
+    ├── DevSecurityConfig.java
+    ├── ProdSecurityConfig.java
+    └── SecurityBeansConfig.java
 ```
 
 À noter :
@@ -644,16 +658,7 @@ Fonctionnalités validées :
 - Validation d'accès avec @EnableMethodSecurity en config et @PreAuthorize dans le service;
 - configuration stateless préparée pour JWT.
 
-### TODO principal
-
-La sécurité complète n'est pas encore finalisée.
-
-Prochaine étape prévue :
-
-```text
-Authentification locale username/password -> génération accessToken JWT -> validation Bearer token
-```
-
+La gestion propre des erreurs JWT distingue authentification et autorisation : `AuthenticationEntryPoint` pour les `401`, `AccessDeniedHandler` pour les `403`.
 
 ### Endpoints publics
 
@@ -676,57 +681,93 @@ DELETE /api/user/delete/:id
 
 ---
 
-## 14. Stratégie JWT à clarifier avec le front
+## 14. Stratégie JWT
 
-Réflexion actuelle côté front :
+Le front manipule uniquement :
+- `accessToken`
+- utilisateur connecté, à exposer plus tard via un endpoint type `/api/auth/me`
 
-> Le front ne devrait probablement connaître que :
->
-> - `accessToken`
-> - `user` connecté
->
-> Le `refreshToken`, s’il existe, devrait rester côté back uniquement.
-
-Conséquences côté back :
-
-- Option recommandée : refresh token en cookie HttpOnly si refresh token nécessaire.
-- Le front ne manipule pas directement le refresh token.
-- Le front envoie l’access token via :
+Le front envoie l'access token via :
 
 ```http
 Authorization: Bearer <accessToken>
 ```
 
-- Le back valide l’access token dans un filtre JWT.
+### Refresh token
 
-À décider :
+À ce stade :
+- **Pas de refresh token implémenté.**
+- Si un refresh token est ajouté plus tard, l'orientation recommandée reste un cookie `HttpOnly` côté back.
 
-- Y aura-t-il un refresh token ?
-- Si oui, sera-t-il en cookie HttpOnly ?
-- Le endpoint `/api/auth/refresh` sera-t-il nécessaire ?
-- Comment gérer `/api/auth/logout` sans refresh token dans le body ?
+À décider plus tard :
+- endpoint `/api/auth/refresh` ;
+- stratégie logout ;
+- rotation / révocation du refresh token.
 
----
+### Clé JWT
 
-## 15. Proposition de filterChain cible
+La clé JWT est générée aléatoirement côté Java via JJWT, encodée en Base64, puis stockée en configuration. Pour HS256, la clé doit faire au moins 256 bits.
 
 Exemple conceptuel :
 
+```properties
+security.jwt.secret=<base64-strong-secret>
+security.jwt.expiration=1800000
+```
+
+### JwtService - comportement attendu
+
+- Générer un token signé avec `HS256`.
+- Mettre le username dans le claim `sub`.
+- Ajouter `iat` et `exp`.
+- Parser et vérifier le token via `verifyWith(getSigningKey())`.
+- Extraire le username depuis le claim `sub`.
+- Valider cohérence username + expiration.
+
+### LoginResponse
+
+```java
+public record LoginResponse(
+        String accessToken
+) {
+}
+```
+
+---
+
+## 15. FilterChain
+
+`@EnableMethodSecurity` doit être positionné sur une classe `@Configuration`. Les méthodes métiers peuvent ensuite être protégées avec `@PreAuthorize`, par exemple `@PreAuthorize("hasRole('ADMIN')")`.
+
 ```java
 @Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    return http
-            .csrf(csrf -> csrf.disable())
+SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+            .csrf(AbstractHttpConfigurer::disable)
             .cors(Customizer.withDefaults())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session ->
+                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .exceptionHandling(ex -> ex
+                    .authenticationEntryPoint(restAuthenticationEntryPoint)
+                    .accessDeniedHandler(restAccessDeniedHandler)
+            )
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/auth/**").permitAll()
-                    .requestMatchers("/h2-console/**").permitAll()
+                    .requestMatchers("/api/health").permitAll()
+                    .requestMatchers(PathRequest.toH2Console()).permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/user/metaCreate").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/user/create").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/user/getList").hasRole(Role.ADMIN.name())
+                    .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
                     .anyRequest().authenticated()
             )
-            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
-            // .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .build();
+            .headers(headers ->
+                    headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+    return http.build();
 }
 ```
 
@@ -871,12 +912,20 @@ Fonctionnalités futures :
 - H2 console en dev.
 - Préparation JWT.
 
-### TODO 5 — Préparer JWT
+### TODO 5 — Préparer JWT - DONE &#x2714;
 
 - Service de génération access token.
+- Clé JWT forte Base64 compatible HS256.
 - Filtre de validation JWT.
-- `Authorization: Bearer <accessToken>`.
-- Décider refresh token ou pas côté front.
+- Header `Authorization: Bearer <accessToken>`.
+- Login `POST /api/auth/login`.
+- BCrypt pour les mots de passe.
+- Rôles `USER` / `ADMIN` avec authorities `ROLE_USER` / `ROLE_ADMIN`.
+- Protection `/api/user/getList` réservée ADMIN.
+- Fichier .env ajouté pour gérer les secrets. 
+- Fichier .env.example poussé pour guider le développeur.
+- Tests Postman : **validés**.
+- Refresh token : **non implémenté**, à décider plus tard.
 
 ### TODO 6 — Documentation
 

@@ -10,9 +10,9 @@
 -- ------------------------------------------------------------
 INSERT INTO app_user (id, username, email, password, role)
 VALUES
-    (1, 'admin', 'admin@tf.local', 'passWord?1', 'ADMIN'),
-    (2, 'thomas', 'thomas@tf.local', 'passWord?1', 'USER'),
-    (3, 'marie', 'marie@tf.local', 'passWord?1', 'USER');
+    (1, 'admin', 'admin@tf.local', '$2a$10$Bz5vk5hAa6SZL8sGKxaEGu6rrpCVqLxGgMZOIDB30kq1i69qWaKe.', 'ADMIN'),
+    (2, 'thomas', 'thomas@tf.local', '$2a$10$Bz5vk5hAa6SZL8sGKxaEGu6rrpCVqLxGgMZOIDB30kq1i69qWaKe.', 'USER'),
+    (3, 'marie', 'marie@tf.local', '$2a$10$Bz5vk5hAa6SZL8sGKxaEGu6rrpCVqLxGgMZOIDB30kq1i69qWaKe.', 'USER');
 
 -- ------------------------------------------------------------
 -- Tickets

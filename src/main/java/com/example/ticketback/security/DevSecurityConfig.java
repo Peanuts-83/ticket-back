@@ -1,6 +1,8 @@
 package com.example.ticketback.security;
 
 import com.example.ticketback.domain.enums.Role;
+import com.example.ticketback.security.jwt.JwtAuthentificationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +16,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -26,8 +29,11 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 @Profile("dev")
 public class DevSecurityConfig {
+    private final JwtAuthentificationFilter jwtAuthenticationFilter;
+
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -52,13 +58,14 @@ public class DevSecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/user/update").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/user/delete/{id}").authenticated()
                                 // accès admin
-                                .requestMatchers(HttpMethod.POST, "/api/user/getList").hasRole(Role.ROLE_ADMIN.name())
-                                .requestMatchers("/api/admin/**").hasRole(Role.ROLE_ADMIN.name())
+                                .requestMatchers(HttpMethod.POST, "/api/user/getList").hasRole(Role.ADMIN.name())
+                                .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
                                 // le reste requiert une auth
-                                .anyRequest().authenticated()
+                                .anyRequest().permitAll()
                 )
                 // affichage console H2 dans un iframe
-                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -9,7 +9,7 @@ import java.util.Map;
  * Controleur technique de bonne santé de l'api
  */
 @RestController
-public class healthController {
+public class HealthController {
 
     @GetMapping("/api/health")
     public Map<String, String> health() {
