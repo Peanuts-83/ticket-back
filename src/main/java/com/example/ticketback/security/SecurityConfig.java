@@ -1,6 +1,6 @@
 package com.example.ticketback.security;
 
-import com.example.ticketback.domain.enums.Role;
+import com.example.ticketback.domain.enums.UserRole;
 import com.example.ticketback.security.jwt.JwtAuthentificationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -41,16 +41,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // auth publique
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/health").permitAll()
-                        // Appli de démo, create ouvert et non réservé ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/user/metaCreate").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/user/create").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/user/getUpdate/{id}").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/user/update").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/user/delete/{id}").authenticated()
-                        // accès admin
-                        .requestMatchers(HttpMethod.POST, "/api/user/getList").hasRole(Role.ADMIN.name())
-                        .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
+                        // accès Swagger
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).hasRole(UserRole.ADMIN.name())
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

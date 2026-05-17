@@ -1,14 +1,11 @@
 package com.example.ticketback.dto.user;
 
 import com.example.ticketback.domain.enums.UserRole;
-import com.example.ticketback.domain.enums.UserStatus;
 import com.example.ticketback.dto.common.MetaField;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.time.LocalDateTime;
-
-@Schema(description = "Détails d'un utilisateur, pas de password")
-public record UserDto (
+@Schema(description = "DTO de formulaire utilisateur pour création et modification")
+public record UserFormDto(
         @MetaField(libelle = "Identifiant")
         @Schema(
                 description = "Identifiant unique, null au create",
@@ -38,19 +35,16 @@ public record UserDto (
         )
         UserRole role,
 
-        @MetaField(libelle = "Date et heure de création")
+        @MetaField(libelle = "Mot de passe")
         @Schema(
-                description = "Date et heure de création de l'utilisateur au format ISO-8601.",
-                example = "2026-05-16T14:35:22"
+                description = """
+                mot de passe utilisateur,
+                obligatoire en création,
+                optionnel en modification
+                """,
+                example = "azertyP_1"
         )
-        LocalDateTime dateHeureCreation,
-
-        @MetaField(libelle = "Statut")
-        @Schema(
-                description = "Statut fonctionnel de l'utilisateur.",
-                example = "ACTIF"
-        )
-        UserStatus status,
+        String password,
 
         @MetaField(libelle = "Avatar")
         @Schema(
@@ -59,6 +53,5 @@ public record UserDto (
                 nullable = true
         )
         String avatar
-
 ) {
 }

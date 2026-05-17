@@ -4,16 +4,16 @@ import com.example.ticketback.domain.enums.UserRole;
 import com.example.ticketback.domain.enums.UserStatus;
 import com.example.ticketback.dto.common.MetaField;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.models.media.DateTimeSchema;
 
 import java.time.LocalDateTime;
 
-@Schema(description = "Détails d'un utilisateur, pas de password")
-public record UserDto (
+@Schema(description = "DTO de liste d'utilisateurs, ne contient pas le password")
+public record UserListDto(
         @MetaField(libelle = "Identifiant")
         @Schema(
-                description = "Identifiant unique, null au create",
-                example = "1",
-                nullable = true
+                description = "Identifiant unique",
+                example = "1"
         )
         Long id,
 
@@ -50,15 +50,6 @@ public record UserDto (
                 description = "Statut fonctionnel de l'utilisateur.",
                 example = "ACTIF"
         )
-        UserStatus status,
-
-        @MetaField(libelle = "Avatar")
-        @Schema(
-                description = "Avatar de l'utilisateur. Peut être une URL, un nom de fichier ou un identifiant de ressource.",
-                example = "https://cdn.ticketflow.local/avatars/user-1.png",
-                nullable = true
-        )
-        String avatar
-
+        UserStatus status
 ) {
 }

@@ -20,3 +20,11 @@ Elle expose des api REST, avec une couche de sécurité via l'usage de JWT et Sp
 - Assignation à un utilisateur
 - Pagination, tri, filtre
 - Historique
+
+## Lancement du projet
+
+Installer les dépendances requises puis dans un terminal
+
+````bash
+mvn spring-boot:run
+````

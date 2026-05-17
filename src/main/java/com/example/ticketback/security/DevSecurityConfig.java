@@ -1,13 +1,11 @@
 package com.example.ticketback.security;
 
-import com.example.ticketback.domain.enums.Role;
 import com.example.ticketback.security.jwt.JwtAuthentificationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -45,23 +43,20 @@ public class DevSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // endpoints autorisés
                 .authorizeHttpRequests(auth -> auth
-                                // auth publique
-                                .requestMatchers("/api/auth/**").permitAll()
-                                // healthController
-                                .requestMatchers("/api/health").permitAll()
-                                // H2 en dev
-                                .requestMatchers(PathRequest.toH2Console()).permitAll()
-
-                                .requestMatchers(HttpMethod.GET, "/api/user/metaCreate").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/user/create").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/user/getUpdate/{id}").authenticated()
-                                .requestMatchers(HttpMethod.POST, "/api/user/update").authenticated()
-                                .requestMatchers(HttpMethod.POST, "/api/user/delete/{id}").authenticated()
-                                // accès admin
-                                .requestMatchers(HttpMethod.POST, "/api/user/getList").hasRole(Role.ADMIN.name())
-                                .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
-                                // le reste requiert une auth
-                                .anyRequest().permitAll()
+                        // auth publique
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/health").permitAll()
+                        // H2 en dev
+                        .requestMatchers(PathRequest.toH2Console()).permitAll()
+                        // accès Swagger
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+                        // le reste requiert une auth,
+                        // les règles fines sont gérés par @PreAuthorized dans les services
+                        .anyRequest().authenticated()
                 )
                 // affichage console H2 dans un iframe
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))

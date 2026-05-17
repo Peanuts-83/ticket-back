@@ -63,13 +63,13 @@ public final class MetaBuilder {
 
     private static Meta buildMeta(String fieldName, Class<?> fieldType, MetaField annotation) {
         MetaType type = resolveType(fieldType);
-        Object defaultValue = resolveDefaultValue(fieldName, annotation);
         List<String> values = resolveValues(fieldType, annotation);
+        Object defaultValue = resolveDefaultValue(fieldName, annotation);
         String libelle = resolveLibelle(annotation);
         return new Meta(
                 type,
-                (List<String>) defaultValue,
                 values,
+                defaultValue,
                 libelle
         );
     }

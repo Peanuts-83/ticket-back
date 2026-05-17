@@ -1,16 +1,17 @@
 package com.example.ticketback.domain.entity;
 
-import com.example.ticketback.domain.enums.Role;
+import com.example.ticketback.domain.enums.UserRole;
+import com.example.ticketback.domain.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -43,13 +44,26 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Role role;
+    private UserRole role;
 
-    public User(String username, String email, String password, Role role) {
+    @Column(nullable = false)
+    private LocalDateTime dt_created;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private UserStatus status;
+
+    // url de l'image
+    private String avatar;
+
+    public User(String username, String email, String password, UserRole role, LocalDateTime dt_created, UserStatus status, String avatar) {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.role = role != null ? role : Role.USER;
+        this.role = role != null ? role : UserRole.USER;
+        this.dt_created = dt_created != null ? dt_created : LocalDateTime.now();
+        this.status = status != null ? status : UserStatus.ACTIVE;
+        this.avatar = avatar;
     }
 
     @Override

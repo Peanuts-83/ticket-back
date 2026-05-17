@@ -1,5 +1,7 @@
 package com.example.ticketback.dto.common;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -11,9 +13,14 @@ import java.util.Map;
  * @param metas métadonnées techniques des champs
  * @param nb nb de lignes retournées dans data pour les listes
  */
+@Schema(description = "HttpPostResult retourné à une requête")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record HttpPostResult<T>(
+        @Schema(description = "Données T [key: value]")
         T data,
+        @Schema(description = "Métadonnées spécifiques à chaque champ")
         Map<String, Meta> metas,
+        @Schema(description = "Nombre de lignes retournées pour les listes")
         Long nb
 ) {
     /**

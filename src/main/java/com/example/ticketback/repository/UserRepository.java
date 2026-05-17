@@ -30,8 +30,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findById(Long id);
 
     /**
-     * Evite d'utiliser findAll qui requete toute la liste
-     * @param pageable
+     * Évite d'utiliser findAll qui requête toute la liste
      */
     @Query("select u from User u order by u.id asc")
     List<User> findList(Pageable pageable);

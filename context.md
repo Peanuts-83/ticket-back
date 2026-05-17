@@ -66,6 +66,8 @@ src/main/java/com/example/ticketback/
 │
 ├── controller/
 │
+├── documentation/│*config Swagger
+│
 ├── domain/
 │   └── entity/
 │   └── enums/
@@ -75,25 +77,25 @@ src/main/java/com/example/ticketback/
 │   └── user/
 │   └── ticket/
 │
-├── service/
-│
 ├── repository/
 │
-└── security/
-    ├── auth/
-    │   ├── AuthController.java
-    │   └── models/
-    │       ├── LoginRequest.java
-    │       └── LoginResponse.java
-    │
-    ├── jwt/
-    │   ├── JwtService.java
-    │   ├── JwtProperties.java
-    │   └── JwtAuthentificationFilter.java
-    │
-    ├── DevSecurityConfig.java
-    ├── ProdSecurityConfig.java
-    └── SecurityBeansConfig.java
+├── security/
+│   ├── auth/
+│   │   ├── AuthController.java
+│   │   └── models/
+│   │       ├── LoginRequest.java
+│   │       └── LoginResponse.java
+│   │
+│   ├── jwt/
+│   │   ├── JwtService.java
+│   │   ├── JwtProperties.java
+│   │   └── JwtAuthentificationFilter.java
+│   │
+│   ├── DevSecurityConfig.java
+│   ├── ProdSecurityConfig.java
+│   └── SecurityBeansConfig.java
+│
+└── service/
 ```
 
 À noter :
@@ -342,7 +344,7 @@ GET    /api/user/{id}
 GET    /api/user
 POST   /api/user
 PUT    /api/user/{id}
-DELETE /api/user/{id}
+DELETE /api/user
 ```
 
 Il s’agit plutôt d’un style **API applicative / action-based**, proche de certains back-office d’entreprise.
@@ -409,11 +411,12 @@ export enum ViewDataType {
 
 ```ts
 export interface HttpPostResult<T> {
-    /** données du résultat */
+    /** Données du résultat */
     data: T,
-
     /** Nbre de ligne du résultat */
     nb?: number
+    /** Métadonnées techniques des champs */
+    metas?: Map<String, Meta> 
 }
 ```
 
@@ -502,14 +505,19 @@ public record BaseHttpParams(
 ```java
 public record HttpPostResult<T>(
         T data,
+        Map<String, Meta> metas,
         Long nb
 ) {
     public static <T> HttpPostResult<T> of(T data) {
-        return new HttpPostResult<>(data, null);
+        return new HttpPostResult<>(data, null, null);
     }
 
     public static <T> HttpPostResult<T> of(T data, Long nb) {
-        return new HttpPostResult<>(data, nb);
+        return new HttpPostResult<>(data, null, nb);
+    }
+
+    public static <T> HttpPostResult<T>ofMeta(@NonNull T data) {
+        return new HttpPostResult<>(data, MetaBuilder.fromClass(data.getClass()), null);
     }
 }
 ```
@@ -676,7 +684,7 @@ POST /api/admin/**              # réservé ADMIN
 POST /api/user/getList          # réservé ADMIN
 GET  /api/user/getUpdate/:id
 POST /api/user/update
-DELETE /api/user/delete/:id
+DELETE /api/user/delete
 ```
 
 ---
@@ -753,16 +761,20 @@ SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                     .accessDeniedHandler(restAccessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
+                    // auth publique
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/health").permitAll()
+                    // H2 en dev
                     .requestMatchers(PathRequest.toH2Console()).permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/user/metaCreate").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/user/create").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/user/getList").hasRole(Role.ADMIN.name())
-                    .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
-                    .anyRequest().authenticated()
-            )
-            .headers(headers ->
+                    // accès Swagger
+                    .requestMatchers(
+                            "/v3/api-docs/**",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html"
+                    ).permitAll()
+                    // le reste requiert une auth,
+                    // les règles fines sont gérés par @PreAuthorized dans les services
+                    .anyRequest().authenticated()rs(headers ->
                     headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -927,17 +939,11 @@ Fonctionnalités futures :
 - Tests Postman : **validés**.
 - Refresh token : **non implémenté**, à décider plus tard.
 
-### TODO 6 — Documentation
+### TODO 6 — Documentation - DONE &#x2714;
 
 - Mettre en place une documentation auto type Swagger
 
-### TODO 7 — Connecter le front
-
-- Vérifier CORS.
-- Aligner les URLs avec le `baseUrl interceptor` front.
-- Tester login/register ou user/create selon stratégie.
-
-### TODO 8 — Tests back
+### TODO 7 — Tests back
 
 À prévoir :
 
@@ -945,6 +951,18 @@ Fonctionnalités futures :
 - Tests repository avec H2.
 - Tests controller avec MockMvc.
 - Tests security pour endpoints publics/protégés.
+
+### TODO 8 — Optimiser le metaBuilder
+
+- Gestion fine des types selon besoins
+- Ne pas envoyer les valeurs null
+- Champs supplémentaires éventuels (LS, etc...)
+
+### TODO 9 — Connecter le front
+
+- Vérifier CORS.
+- Aligner les URLs avec le `baseUrl interceptor` front.
+- Tester login/register ou user/create selon stratégie.
 
 ---
 

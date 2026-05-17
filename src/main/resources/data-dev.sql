@@ -8,11 +8,11 @@
 -- ------------------------------------------------------------
 -- Utilisateurs
 -- ------------------------------------------------------------
-INSERT INTO app_user (id, username, email, password, role)
+INSERT INTO app_user (id, username, email, password, role, dt_created, status, avatar)
 VALUES
-    (1, 'admin', 'admin@tf.local', '$2a$10$Bz5vk5hAa6SZL8sGKxaEGu6rrpCVqLxGgMZOIDB30kq1i69qWaKe.', 'ADMIN'),
-    (2, 'thomas', 'thomas@tf.local', '$2a$10$Bz5vk5hAa6SZL8sGKxaEGu6rrpCVqLxGgMZOIDB30kq1i69qWaKe.', 'USER'),
-    (3, 'marie', 'marie@tf.local', '$2a$10$Bz5vk5hAa6SZL8sGKxaEGu6rrpCVqLxGgMZOIDB30kq1i69qWaKe.', 'USER');
+    (1, 'admin', 'admin@tf.local', '$2a$10$Bz5vk5hAa6SZL8sGKxaEGu6rrpCVqLxGgMZOIDB30kq1i69qWaKe.', 'ADMIN', CURRENT_TIMESTAMP, 'ACTIVE', null),
+    (2, 'thomas', 'thomas@tf.local', '$2a$10$Bz5vk5hAa6SZL8sGKxaEGu6rrpCVqLxGgMZOIDB30kq1i69qWaKe.', 'USER', CURRENT_TIMESTAMP, 'ACTIVE', null),
+    (3, 'marie', 'marie@tf.local', '$2a$10$Bz5vk5hAa6SZL8sGKxaEGu6rrpCVqLxGgMZOIDB30kq1i69qWaKe.', 'USER', CURRENT_TIMESTAMP, 'SUSPENDED', null);
 
 -- ------------------------------------------------------------
 -- Tickets

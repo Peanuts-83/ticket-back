@@ -1,11 +1,11 @@
 package com.example.ticketback.service;
 
 import com.example.ticketback.domain.entity.User;
-import com.example.ticketback.domain.enums.Role;
+import com.example.ticketback.domain.enums.UserRole;
 import com.example.ticketback.dto.common.BaseHttpParams;
-import com.example.ticketback.dto.user.UserCreateDto;
+import com.example.ticketback.dto.user.UserFormDto;
 import com.example.ticketback.dto.user.UserDto;
-import com.example.ticketback.dto.user.UserUpdateDto;
+import com.example.ticketback.dto.user.UserListDto;
 import com.example.ticketback.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +26,14 @@ import java.util.List;
 public class UserService {
     private final UserRepository userRepository;
 
+    @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#id)")
     public UserDto get(Long id) {
         User user = findUserOrThrow(id);
         return toDto(user);
     }
 
-    public List<UserDto> getList(BaseHttpParams params) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<UserListDto> getList(BaseHttpParams params) {
         Pageable pageable = (Pageable) PageRequest.of(
                 params.resolvedparamList().pageNum(),
                 params.resolvedparamList().nb()
@@ -39,18 +41,19 @@ public class UserService {
         List<User> userList = userRepository.findList((org.springframework.data.domain.Pageable) pageable);
         return userList
                 .stream()
-                .map(this::toDto)
+                .map(this::toDtoList)
                 .toList();
     }
 
     @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#id)")
-    public UserUpdateDto getUpdate(Long id) {
+    public UserFormDto getUpdate(Long id) {
         User user = findUserOrThrow(id);
         return toUpdateDto(user);
     }
 
+    // TODO: prévoir un formulaire spécifique pour renouveler le pwd
     @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#dto.id()")
-    public UserDto update(UserUpdateDto dto) {
+    public UserDto update(UserFormDto dto) {
         if (dto == null || dto.id() == null) {
             throw new IllegalArgumentException("User id is required for update");
         }
@@ -62,14 +65,18 @@ public class UserService {
         return toDto(updatedUser);
     }
 
-    public UserCreateDto getMetaCreate() {
-        return new UserCreateDto(null, null, null, null);
+    @PreAuthorize("permitAll")
+    public UserFormDto getMetaCreate() {
+        return new UserFormDto(null, null, null, null, null, null);
     }
 
-    // TODO: hasher le pwd avec BCrypt
-    public UserDto create(UserCreateDto dto) {
+    @PreAuthorize("permitAll")
+    public UserDto create(UserFormDto dto) {
         if (dto == null) {
-            throw new IllegalArgumentException("User paload is required for create");
+            throw new IllegalArgumentException("User payload is required for create");
+        }
+        if (dto.password() == null || dto.password().isEmpty()) {
+            throw new IllegalArgumentException("Password is required for create");
         }
         // check de l'existant
         if (userRepository.existsByUsername(dto.userName())) {
@@ -83,7 +90,10 @@ public class UserService {
                 dto.userName(),
                 dto.email(),
                 dto.password(),
-                dto.role() != null ? dto.role() : Role.USER
+                dto.role() != null ? dto.role() : UserRole.USER,
+                null,
+                null,
+                dto.avatar()
         );
         User savedUser = userRepository.save(user);
         return toDto(savedUser);
@@ -105,7 +115,7 @@ public class UserService {
 
     /**
      * Recherche un user ou lève une exception simple.
-     *
+     * <p>
      * Pour l'instant IllegalArgumentException suffit.
      * Plus tard, on pourra créer une NotFoundException
      * et un GlobalExceptionHandler.
@@ -123,16 +133,32 @@ public class UserService {
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                user.getDt_created(),
+                user.getStatus(),
+                user.getAvatar()
         );
     }
 
-    private UserUpdateDto toUpdateDto(User user) {
-        return new UserUpdateDto(
+    private UserFormDto toUpdateDto(User user) {
+        return new UserFormDto(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                null,
+                user.getAvatar()
+        );
+    }
+
+    private UserListDto toDtoList(User user) {
+        return new UserListDto(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole(),
+                user.getDt_created(),
+                user.getStatus()
         );
     }
 }

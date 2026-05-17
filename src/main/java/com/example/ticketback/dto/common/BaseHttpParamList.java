@@ -1,12 +1,19 @@
 package com.example.ticketback.dto.common;
 
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Paramètres génériques pour les appels de liste
+ *
  * @param pageNum
- * @param nb nombre de lignes
+ * @param nb      nombre de lignes
  */
+@Schema(description = "Http params pour une liste")
 public record BaseHttpParamList(
+        @Schema(description = "Numéro de page")
         Integer pageNum,
+        @Schema(description = "Nombre d'items par page")
         Integer nb
 ) {
 
