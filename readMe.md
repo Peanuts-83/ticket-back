@@ -28,3 +28,20 @@ Installer les dépendances requises puis dans un terminal
 ````bash
 mvn spring-boot:run
 ````
+
+## Swagger
+
+La documentation des api se trouve a cette adresse: http://localhost:8080/swagger-ui/index.html
+
+## Base de donnée H2 (devMode)
+
+L'interface de l'administration H2 se trouve ici: http://localhost:8080/h2-console/
+
+## Tests
+
+Lancer tous les tests
+
+```bash
+mvn clean test
+mvn clean verify
+```

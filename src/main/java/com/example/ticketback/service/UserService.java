@@ -7,6 +7,7 @@ import com.example.ticketback.dto.user.UserFormDto;
 import com.example.ticketback.dto.user.UserDto;
 import com.example.ticketback.dto.user.UserListDto;
 import com.example.ticketback.repository.UserRepository;
+import jakarta.annotation.Nullable;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -33,11 +34,11 @@ public class UserService {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public List<UserListDto> getList(BaseHttpParams params) {
-        Pageable pageable = (Pageable) PageRequest.of(
+    public List<UserListDto> getList(@Nullable BaseHttpParams params) {
+        Pageable pageable = params != null && params.paramList() != null ? (Pageable) PageRequest.of(
                 params.resolvedparamList().pageNum(),
                 params.resolvedparamList().nb()
-        );
+        ) : null;
         List<User> userList = userRepository.findList((org.springframework.data.domain.Pageable) pageable);
         return userList
                 .stream()

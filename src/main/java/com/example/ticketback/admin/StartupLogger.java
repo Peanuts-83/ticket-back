@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
+/**
+ * Logger pour debug à l'initialisation
+ */
 @Component
 @RequiredArgsConstructor
 public class StartupLogger {
@@ -14,7 +17,7 @@ public class StartupLogger {
 
     @PostConstruct
     public void logProfiles() {
-        System.out.println("Active profiles: " + Arrays.toString(environment.getActiveProfiles()));
+        System.out.println("### Active profiles: " + Arrays.toString(environment.getActiveProfiles()) + "############");
     }
 
 }
