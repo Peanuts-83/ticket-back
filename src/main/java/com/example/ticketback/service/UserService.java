@@ -35,10 +35,11 @@ public class UserService {
 
     @PreAuthorize("hasRole('ADMIN')")
     public List<UserListDto> getList(@Nullable BaseHttpParams params) {
-        Pageable pageable = params != null && params.paramList() != null ? (Pageable) PageRequest.of(
+        Pageable pageable = params != null && params.paramList() != null ?
+                (Pageable) PageRequest.of(
                 params.resolvedparamList().pageNum(),
                 params.resolvedparamList().nb()
-        ) : null;
+        ) : Pageable.unpaged();
         List<User> userList = userRepository.findList((org.springframework.data.domain.Pageable) pageable);
         return userList
                 .stream()

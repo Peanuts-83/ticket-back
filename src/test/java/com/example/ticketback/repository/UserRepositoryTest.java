@@ -30,7 +30,7 @@ public class UserRepositoryTest {
         user.setRole(UserRole.USER);
         user.setDt_created(LocalDateTime.now());
         user.setStatus(UserStatus.ACTIVE);
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
         Optional<User> userFoundByName = userRepository.findByUsername("test");
         assertTrue(userFoundByName.isPresent());
@@ -42,15 +42,27 @@ public class UserRepositoryTest {
         assertTrue(userFoundByEmail.isPresent());
         assertEquals(user.getUsername(), userFoundByEmail.get().getUsername());
 
-        Optional<User> userFoundById = userRepository.findById(1L);
+        Optional<User> userFoundById = userRepository.findById(savedUser.getId());
         assertTrue(userFoundById.isPresent());
         assertEquals(user.getUsername(), userFoundById.get().getUsername());
     }
 
     @Test
-    @DisplayName("Doit lancer une exception avec message si l'utilisateur n'est pas trouvé")
+    @DisplayName("Doit retourner Optional.empty si l'utilisateur n'est pas trouvé")
     void shouldReturnEmptyForUnknownUser() {
         assertEquals(Optional.empty(), userRepository.findById(3L));
+    }
+
+    @Test
+    @DisplayName(("Doit retourner Optional.empty si l'email est inconnu"))
+    void shouldReturnEmptyForUnknownEmail() {
+        assertEquals(Optional.empty(), userRepository.findByEmail("test@none.com"));
+    }
+
+    @Test
+    @DisplayName(("Doit retourner Optional.empty si le username est inconnu"))
+    void shouldReturnEmptyForUnknownUsername() {
+        assertEquals(Optional.empty(), userRepository.findByUsername("unknown"));
     }
 
 }

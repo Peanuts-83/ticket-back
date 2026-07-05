@@ -32,7 +32,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /**
      * Évite d'utiliser findAll qui requête toute la liste
      */
-    @Query("select u from User u order by u.id asc")
+    @Query("select u from User u order by u.username asc")
     List<User> findList(Pageable pageable);
 
     boolean existsByUsername(String username);

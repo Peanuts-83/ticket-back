@@ -943,7 +943,7 @@ Fonctionnalités futures :
 
 - Mettre en place une documentation auto type Swagger
 
-### TODO 7 — Tests back
+### TODO 7 — Tests back - DONE &#x2714;
 
 À prévoir :
 

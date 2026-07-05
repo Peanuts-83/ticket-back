@@ -91,3 +91,30 @@ Implémentation de 2 config de sécurité: dev et prod.
 
 ---
 
+## Phase 6 - Swagger
+
+- Mise en place de la doc d'api Swagger
+- Paramétrage des accès de sécurité dans devSecurityConfig
+- Optimisation de la doc existante dans les classes
+
+--- 
+
+## Phase 7 - Mise en place des tests (à compléter)
+
+### DONE 
+
+- Tests sur User
+  - Sur le repository avec @DataJpaTest (JPA/H2) -> ACCES DONNES / tests d'intégration repo / JPA
+  - Sur le service 
+    - avec Mockito -> tests unitaire METIER
+    - test SECURITE / authorisations Spring Security
+  - Sur le contrôleur avec MockMvc -> endPoint HTTP / JSON / wrapper HttpPostResult  
+  - TicketBackApplicationTests -> tests de démarrage du CONTEXTE global
+
+--- 
+
+## Phase 8 - Optimisation (en attente)
+
+--- 
+
+## Phase 9 - Connecter au front (en cours)

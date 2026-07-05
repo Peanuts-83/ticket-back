@@ -2,6 +2,7 @@ package com.example.ticketback.service;
 
 import com.example.ticketback.dto.common.BaseHttpParams;
 import com.example.ticketback.repository.UserRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,17 +33,20 @@ public class UserServiceSecurityTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
+    @DisplayName("Un utilisateur au profil 'ADMIN' a accès à la liste des utilisateurs")
     void shouldAllowAdminForUserList() {
         assertDoesNotThrow(() -> userService.getList(params));
     }
 
     @Test
     @WithMockUser(roles = "USER")
+    @DisplayName("Un utilisateur au profil 'USER' n'a pas accès à la liste des utilisateurs")
     void shouldRejectUserForUserList() throws Exception {
         assertThrows(AuthorizationDeniedException.class, () -> userService.getList(params));
     }
 
     @Test
+    @DisplayName("Un utilisateur non authentifié n'a pas accès à la liste des utilisateurs")
     void shouldRejectAnonymousForUserList() throws Exception {
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> userService.getList(params));
     }

@@ -2,17 +2,18 @@ package com.example.ticketback.service;
 import com.example.ticketback.domain.entity.User;
 import com.example.ticketback.domain.enums.UserRole;
 import com.example.ticketback.domain.enums.UserStatus;
+import com.example.ticketback.dto.common.BaseHttpParamList;
+import com.example.ticketback.dto.common.BaseHttpParams;
+import com.example.ticketback.dto.common.ViewDataType;
 import com.example.ticketback.dto.user.UserDto;
+import com.example.ticketback.dto.user.UserListDto;
 import com.example.ticketback.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
@@ -75,12 +77,25 @@ public class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Doit retourner null si l'utilisateur n'existe pas")
+    @DisplayName("Doit retourner une exception si l'utilisateur n'existe pas")
     void shouldThrowExceptionForUnknownUser() {
         when(userRepository.findById(3L)).thenReturn(Optional.empty());
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userService.get(3L));
         assertEquals("User not found with id: 3", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Doit retourner une liste d'utilisateurs")
+    void shouldGetAllUsers() {
+        when(userRepository.findList(any(Pageable.class))).thenReturn(users);
+
+        List<UserListDto> result = userService.getList(null);
+
+        assertNotNull(result);
+        assertEquals(users.size(), result.size());
+        assertEquals(users.get(0).getUsername(), result.get(0).userName());
+        assertEquals(users.get(1).getRole(), result.get(1).role());
     }
 
 }
