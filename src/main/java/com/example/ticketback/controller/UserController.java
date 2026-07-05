@@ -1,6 +1,5 @@
 package com.example.ticketback.controller;
 
-import com.example.ticketback.domain.enums.UserRole;
 import com.example.ticketback.dto.common.BaseHttpParams;
 import com.example.ticketback.dto.common.HttpPostResult;
 import com.example.ticketback.dto.user.UserDto;
@@ -10,7 +9,6 @@ import com.example.ticketback.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
