@@ -2,9 +2,6 @@ package com.example.ticketback.service;
 import com.example.ticketback.domain.entity.User;
 import com.example.ticketback.domain.enums.UserRole;
 import com.example.ticketback.domain.enums.UserStatus;
-import com.example.ticketback.dto.common.BaseHttpParamList;
-import com.example.ticketback.dto.common.BaseHttpParams;
-import com.example.ticketback.dto.common.ViewDataType;
 import com.example.ticketback.dto.user.UserDto;
 import com.example.ticketback.dto.user.UserListDto;
 import com.example.ticketback.repository.UserRepository;
@@ -13,7 +10,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -23,7 +19,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 
 public class UserServiceTest {
@@ -94,8 +89,8 @@ public class UserServiceTest {
 
         assertNotNull(result);
         assertEquals(users.size(), result.size());
-        assertEquals(users.get(0).getUsername(), result.get(0).userName());
-        assertEquals(users.get(1).getRole(), result.get(1).role());
+        assertEquals(adminUser.getUsername(), result.get(0).userName());
+        assertEquals(standardUser.getRole(), result.get(1).role());
     }
 
 }

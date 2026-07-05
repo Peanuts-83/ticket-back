@@ -1,11 +1,8 @@
 package com.example.ticketback;
 
 import com.example.ticketback.controller.UserController;
-import com.example.ticketback.domain.enums.UserRole;
-import com.example.ticketback.dto.common.BaseHttpParamList;
 import com.example.ticketback.repository.UserRepository;
 import com.example.ticketback.service.UserService;
-import jakarta.annotation.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +47,7 @@ class TicketBackApplicationTests {
 
     @Test
     @DisplayName("Les beans principaux utilisateur doivent être chargés")
-    void shouldLoadUserBeans() throws Exception {
+    void shouldLoadUserBeans() {
         assertNotNull(userController);
         assertNotNull(userService);
         assertNotNull(userRepository);

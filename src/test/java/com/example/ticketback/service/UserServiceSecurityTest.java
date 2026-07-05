@@ -41,13 +41,13 @@ public class UserServiceSecurityTest {
     @Test
     @WithMockUser(roles = "USER")
     @DisplayName("Un utilisateur au profil 'USER' n'a pas accès à la liste des utilisateurs")
-    void shouldRejectUserForUserList() throws Exception {
+    void shouldRejectUserForUserList() {
         assertThrows(AuthorizationDeniedException.class, () -> userService.getList(params));
     }
 
     @Test
     @DisplayName("Un utilisateur non authentifié n'a pas accès à la liste des utilisateurs")
-    void shouldRejectAnonymousForUserList() throws Exception {
+    void shouldRejectAnonymousForUserList() {
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> userService.getList(params));
     }
 

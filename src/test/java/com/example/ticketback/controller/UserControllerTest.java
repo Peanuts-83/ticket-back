@@ -3,7 +3,6 @@ package com.example.ticketback.controller;
 import com.example.ticketback.domain.enums.UserRole;
 import com.example.ticketback.domain.enums.UserStatus;
 import com.example.ticketback.dto.common.BaseHttpParams;
-import com.example.ticketback.dto.user.UserDto;
 import com.example.ticketback.dto.user.UserListDto;
 import com.example.ticketback.security.jwt.JwtAuthentificationFilter;
 import com.example.ticketback.service.UserService;
