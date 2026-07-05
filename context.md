@@ -751,15 +751,13 @@ public record LoginResponse(
 @Bean
 SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
+            // csrf désactivés pour dev angular
             .csrf(AbstractHttpConfigurer::disable)
+            // CORS à venir pour localhost:4200
             .cors(Customizer.withDefaults())
-            .sessionManagement(session ->
-                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .exceptionHandling(ex -> ex
-                    .authenticationEntryPoint(restAuthenticationEntryPoint)
-                    .accessDeniedHandler(restAccessDeniedHandler)
-            )
+            // Pas de session serveur
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // endpoints autorisés
             .authorizeHttpRequests(auth -> auth
                     // auth publique
                     .requestMatchers("/api/auth/**").permitAll()
@@ -774,9 +772,10 @@ SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                     ).permitAll()
                     // le reste requiert une auth,
                     // les règles fines sont gérés par @PreAuthorized dans les services
-                    .anyRequest().authenticated()rs(headers ->
-                    headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
+                    .anyRequest().authenticated()
             )
+            // affichage console H2 dans un iframe
+            .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
@@ -945,12 +944,11 @@ Fonctionnalités futures :
 
 ### TODO 7 — Tests back - DONE &#x2714;
 
-À prévoir :
-
 - Tests service.
 - Tests repository avec H2.
 - Tests controller avec MockMvc.
 - Tests security pour endpoints publics/protégés.
+- TicketBackApplicationTests -> tests de démarrage du CONTEXTE global
 
 ### TODO 8 — Optimiser le metaBuilder
 
