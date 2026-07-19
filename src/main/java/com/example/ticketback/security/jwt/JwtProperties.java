@@ -11,4 +11,11 @@ import org.springframework.stereotype.Component;
 public class JwtProperties {
     private String secret;
     private Long expiration;
+    private Refresh refresh = new Refresh();
+
+    @Getter @Setter
+    public static class Refresh {
+        private Long idleTimeout;
+        private Long maxSession;
+    }
 }

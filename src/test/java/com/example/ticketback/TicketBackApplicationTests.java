@@ -3,6 +3,7 @@ package com.example.ticketback;
 import com.example.ticketback.controller.UserController;
 import com.example.ticketback.repository.UserRepository;
 import com.example.ticketback.service.UserService;
+import com.example.ticketback.web.ApiRoutes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +58,7 @@ class TicketBackApplicationTests {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("L'endpoint de la liste des utilisateurs doit répondre au profil ADMIN")
     void shouldReachUserGetListEndPoint() throws Exception {
-        mockMvc.perform(post("/api/user/getList")
+        mockMvc.perform(post(ApiRoutes.User.BASE + ApiRoutes.User.GET_LIST)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isOk());

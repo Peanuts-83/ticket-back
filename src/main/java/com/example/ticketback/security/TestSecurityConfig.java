@@ -1,5 +1,6 @@
 package com.example.ticketback.security;
 
+import com.example.ticketback.web.ApiRoutes;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,8 +18,8 @@ public class TestSecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/health").permitAll()
+                        .requestMatchers(ApiRoutes.Auth.BASE + "/**").permitAll()
+                        .requestMatchers(ApiRoutes.Health.HEALTH).permitAll()
                         .anyRequest().authenticated()
                 )
                 .build();

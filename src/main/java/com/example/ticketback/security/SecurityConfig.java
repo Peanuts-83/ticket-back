@@ -2,6 +2,7 @@ package com.example.ticketback.security;
 
 import com.example.ticketback.domain.enums.UserRole;
 import com.example.ticketback.security.jwt.JwtAuthentificationFilter;
+import com.example.ticketback.web.ApiRoutes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,8 +40,9 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/error").permitAll()
                         // auth publique
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(ApiRoutes.Auth.BASE + "/**").permitAll()
                         // accès Swagger
                         .requestMatchers(
                                 "/v3/api-docs/**",
@@ -67,7 +69,7 @@ public class SecurityConfig {
         ));
 
         // Méthodes HTTP autorisées
-        configuration.setAllowedOrigins(List.of(
+        configuration.setAllowedMethods(List.of(
                 "GET", "POST", "DELETE", "OPTIONS"
         ));
 

@@ -1,7 +1,8 @@
-package com.example.ticketback.service;
+package com.example.ticketback.security;
 
 import com.example.ticketback.dto.common.BaseHttpParams;
 import com.example.ticketback.repository.UserRepository;
+import com.example.ticketback.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

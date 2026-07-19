@@ -1,5 +1,6 @@
 package com.example.ticketback.controller;
 
+import com.example.ticketback.web.ApiRoutes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +20,7 @@ import java.util.Map;
 )
 public class HealthController {
 
-    @GetMapping("/api/health")
+    @GetMapping(ApiRoutes.Health.HEALTH)
     @PreAuthorize("permitAll")
     @SecurityRequirements
     @Operation(

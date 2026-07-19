@@ -6,6 +6,7 @@ import com.example.ticketback.dto.user.UserDto;
 import com.example.ticketback.dto.user.UserFormDto;
 import com.example.ticketback.dto.user.UserListDto;
 import com.example.ticketback.service.UserService;
+import com.example.ticketback.web.ApiRoutes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping(ApiRoutes.User.BASE)
 @RequiredArgsConstructor
 @Tag(
         name = "Utilisateurs",
@@ -27,7 +28,7 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
 
-    @GetMapping("/get/{id}")
+    @PostMapping(ApiRoutes.User.GET)
     @Operation(
             summary = "[AUTHENTICATED] Récupère un utilisateur par id",
             tags = {"AUTHENTICATED"},
@@ -37,7 +38,7 @@ public class UserController {
         return HttpPostResult.of(userService.get(id));
     }
 
-    @PostMapping("/getList")
+    @PostMapping(ApiRoutes.User.GET_LIST)
     @Operation(
             summary = "[ADMIN] Liste des utilisateurs",
             tags = {"ADMIN"},
@@ -79,7 +80,7 @@ public class UserController {
         return HttpPostResult.ofList(users, (long) users.size());
     }
 
-    @GetMapping("/getUpdate/{id}")
+    @PostMapping(ApiRoutes.User.GET_UPDATE)
     @Operation(
             summary = "[OWNER, ADMIN] Détails d'un utilisateur",
             tags = {"OWNER", "ADMIN"},
@@ -89,7 +90,7 @@ public class UserController {
         return HttpPostResult.ofMeta(userService.get(id));
     }
 
-    @PostMapping("/update")
+    @PostMapping(ApiRoutes.User.UPDATE)
     @Operation(
             summary = "[OWNER, ADMIN] Modification d'un utilisateur",
             tags = {"OWNER", "ADMIN"},
@@ -105,7 +106,7 @@ public class UserController {
         return HttpPostResult.of(userService.update(payload));
     }
 
-    @GetMapping("/metaCreate")
+    @PostMapping(ApiRoutes.User.META_CREATE)
     @SecurityRequirements
     @Operation(
             summary = "[PUBLIC] Métadonnées de création",
@@ -120,7 +121,7 @@ public class UserController {
         return HttpPostResult.ofMeta(userService.getMetaCreate());
     }
 
-    @PostMapping("/create")
+    @PostMapping(ApiRoutes.User.CREATE)
     @SecurityRequirements
     @Operation(
             summary = "[PUBLIC] Création d'un utilisateur",
@@ -137,7 +138,7 @@ public class UserController {
         return HttpPostResult.of(userService.create(payload));
     }
 
-    @PostMapping("/delete")
+    @PostMapping(ApiRoutes.User.DELETE)
     @Operation(
             summary = "[OWNER, ADMIN] Suppression d'un utilisateur",
             tags = {"OWNER", "ADMIN"},

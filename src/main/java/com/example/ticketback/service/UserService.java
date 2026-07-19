@@ -130,7 +130,7 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
     }
 
-    private UserDto toDto(User user) {
+    public UserDto toDto(User user) {
         return new UserDto(
                 user.getId(),
                 user.getUsername(),

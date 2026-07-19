@@ -270,6 +270,10 @@ Pour une ressource donnée, par exemple `user`, la base d’URL serait :
 /api/user
 ```
 
+
+### Centralisation des routes → ApiRoutes
+- Création de la classe + application dans les 4 contrôleurs, les tests et les 3 configs sécu.
+
 ### Endpoints standards
 
 ```http
@@ -672,7 +676,7 @@ La gestion propre des erreurs JWT distingue authentification et autorisation : `
 
 ```http
 POST /api/auth/login
-GET  /api/user/metaCreate
+POST  /api/user/metaCreate
 POST /api/user/create
 ```
 
@@ -682,7 +686,7 @@ POST /api/user/create
 ```http
 POST /api/admin/**              # réservé ADMIN
 POST /api/user/getList          # réservé ADMIN
-GET  /api/user/getUpdate/:id
+POST  /api/user/getUpdate/:id
 POST /api/user/update
 DELETE /api/user/delete
 ```
@@ -703,14 +707,16 @@ Authorization: Bearer <accessToken>
 
 ### Refresh token
 
-À ce stade :
-- **Pas de refresh token implémenté.**
-- Si un refresh token est ajouté plus tard, l'orientation recommandée reste un cookie `HttpOnly` côté back.
-
-À décider plus tard :
+Refresh token (gestion du temps de session)
+- Entité RefreshToken (hash SHA-256 stocké, pas le token brut), repository, RefreshTokenService avec rotation + double borne : idle glissant 30 min (lastUsedAt) et max absolu 8 h (createdAt conservé à la rotation).
+- Endpoints login (émet le refresh), refresh (rotation), logout (révocation en base).
+- Access token descendu à 15 min.
 - endpoint `/api/auth/refresh` ;
-- stratégie logout ;
-- rotation / révocation du refresh token.
+- rotation / révocation du refresh token effectuée.
+
+Logout
+- Back : POST /api/auth/logout renvoyant un message de confirmation.
+- Front : logout(showConfirm) (message sur logout explicite, silencieux sur logout forcé par l'interceptor).
 
 ### Clé JWT
 
@@ -866,14 +872,14 @@ Ressource cible :
 Endpoints selon convention :
 
 ```http
-GET  /api/ticket/get/{id}
+POST  /api/ticket/get/{id}
 POST /api/ticket/getList
-GET  /api/ticket/getUpdate/{id}
+POST  /api/ticket/getUpdate/{id}
 POST /api/ticket/update
-GET  /api/ticket/metaCreate
+POST  /api/ticket/metaCreate
 POST /api/ticket/create
 POST /api/ticket/getListFor/{id}
-GET  /api/ticket/metaCreateFor/{id}
+POST  /api/ticket/metaCreateFor/{id}
 ```
 
 Fonctionnalités futures :

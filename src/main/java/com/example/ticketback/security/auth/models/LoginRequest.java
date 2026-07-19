@@ -5,10 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "Payload de connection utilisateur")
 public record LoginRequest(
         @Schema(
-                description = "Nom utilisateur",
+                description = "Email utilisateur",
                 example = "admin"
         )
-        String username,
+        String email,
         @Schema(
                 description = "Mot de pase utilisateur",
                 example = "passWord?1"

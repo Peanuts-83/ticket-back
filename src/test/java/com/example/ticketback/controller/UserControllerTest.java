@@ -6,6 +6,7 @@ import com.example.ticketback.dto.common.BaseHttpParams;
 import com.example.ticketback.dto.user.UserListDto;
 import com.example.ticketback.security.jwt.JwtAuthentificationFilter;
 import com.example.ticketback.service.UserService;
+import com.example.ticketback.web.ApiRoutes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,7 @@ public class UserControllerTest {
     @Test
     @DisplayName("api/user/getList appelle l'endpoint de la liste des utilisateurs")
     void shouldCallGetList() throws Exception {
-        mockMvc.perform(post("/api/user/getList")
+        mockMvc.perform(post(ApiRoutes.User.BASE + ApiRoutes.User.GET_LIST)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isOk());
@@ -58,7 +59,7 @@ public class UserControllerTest {
 
         when(userService.getList(nullable(BaseHttpParams.class))).thenReturn(users);
 
-        mockMvc.perform(post("/api/user/getList")
+        mockMvc.perform(post(ApiRoutes.User.BASE + ApiRoutes.User.GET_LIST)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andDo(print())

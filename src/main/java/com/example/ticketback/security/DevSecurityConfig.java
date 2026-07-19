@@ -1,6 +1,7 @@
 package com.example.ticketback.security;
 
 import com.example.ticketback.security.jwt.JwtAuthentificationFilter;
+import com.example.ticketback.web.ApiRoutes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -44,8 +45,9 @@ public class DevSecurityConfig {
                 // endpoints autorisés
                 .authorizeHttpRequests(auth -> auth
                         // auth publique
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/health").permitAll()
+                        .requestMatchers(ApiRoutes.Auth.BASE + "/**").permitAll()
+                        .requestMatchers(ApiRoutes.Health.HEALTH).permitAll()
+                        .requestMatchers("/error").permitAll()
                         // H2 en dev
                         .requestMatchers(PathRequest.toH2Console()).permitAll()
                         // accès Swagger
@@ -79,7 +81,7 @@ public class DevSecurityConfig {
         ));
 
         // Méthodes HTTP autorisées
-        configuration.setAllowedOrigins(List.of(
+        configuration.setAllowedMethods(List.of(
                 "GET", "POST", "DELETE", "OPTIONS"
         ));
 
