@@ -87,7 +87,7 @@ Implémentation de 2 config de sécurité: dev et prod.
 - Fichier .env ajouté pour gérer les secrets.
 - Fichier .env.example poussé pour guider le développeur.
 - Tests Postman : **validés**.
-- Refresh token : **non implémenté**, à décider plus tard.
+- Refresh token : **implémenté**.
 
 ---
 
@@ -99,9 +99,7 @@ Implémentation de 2 config de sécurité: dev et prod.
 
 --- 
 
-## Phase 7 - Mise en place des tests (à compléter)
-
-### DONE 
+## Phase 7 - Mise en place des tests
 
 - Tests sur User
   - Sur le repository avec @DataJpaTest (JPA/H2) -> ACCES DONNES / tests d'intégration repo / JPA
@@ -113,7 +111,38 @@ Implémentation de 2 config de sécurité: dev et prod.
 
 --- 
 
-## Phase 8 - Optimisation (en attente)
+## Phase 8 - Optimisation
+
+### Centralisation des routes
+
+- `ApiRoutes` : source de vérité unique des chemins d'endpoints en constantes `static final String`, regroupées en classes imbriquées par contrôleur (`Auth` / `Health` / `User` / `Ticket`).
+- Contrainte assumée : une valeur d'annotation doit être une constante de compilation → constantes plutôt qu'une `Map` runtime.
+- Référencées partout : `@RequestMapping`/`@PostMapping`, tests MockMvc, `requestMatchers` des `SecurityFilterChain` → un renommage de chemin se propage depuis un seul endroit.
+- `ROUTES.md` : inventaire des endpoints (format inspiré des fichiers de routes).
+
+### Déconnexion
+
+- Endpoint `POST /api/auth/logout` : révocation du refresh token en base + message de confirmation.
+- Front : logout silencieux si forcé (session expirée), avec message si déconnexion explicite.
+
+### Refresh token — durcissement
+
+- Entité `RefreshToken` : on stocke le **hash SHA-256**, jamais le token brut.
+- **Rotation** à chaque refresh + double borne : idle glissant **30 min** (`lastUsedAt`), max absolu **8 h** (`createdAt` conservé lors de la rotation).
+- Access token ramené à **15 min**.
+- Endpoints : `login` (émission), `refresh` (rotation), `logout` (révocation).
+
+### Corrections de robustesse
+
+- `.properties` : suppression des commentaires en fin de ligne (cassaient le binding de `JwtProperties`).
+- Tests : chemins recomposés avec la base (`ApiRoutes.User.BASE + ...`).
+- `RefreshTokenRepository` : type d'ID corrigé en `Long`.
+- `/error` passé en `permitAll` — sinon toute exception d'un endpoint public ressort en **403 trompeur** (forward `/error` bloqué par `anyRequest().authenticated()`).
+
+### Compatibilité Spring Boot 4
+
+- **springdoc-openapi 2.6.0 → 3.0.2** : la 2.x (compilée pour Spring 6) plantait sur Spring Framework 7 (`NoSuchMethodError` sur `ControllerAdviceBean`, déclenché par le `@RestControllerAdvice`). La 3.x supporte Boot 4.
+- Java 21+ recommandé pour springdoc 3.x / Boot 4.
 
 --- 
 

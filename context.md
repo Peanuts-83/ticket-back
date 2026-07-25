@@ -279,18 +279,18 @@ Pour une ressource donnée, par exemple `user`, la base d’URL serait :
 ```http
 GET  /api/user/get/{id}
 POST /api/user/getList
-GET  /api/user/getUpdate/{id}
+POST  /api/user/getUpdate/{id}
 POST /api/user/update
-GET  /api/user/metaCreate
+POST  /api/user/metaCreate
 POST /api/user/create
-DELETE /api/user/delete
+POST /api/user/delete
 ```
 
 ### Endpoints contextuels si besoin
 
 ```http
 POST /api/user/getListFor/{id}
-GET  /api/user/metaCreateFor/{id}
+POST  /api/user/metaCreateFor/{id}
 ```
 
 ### Règle importante
@@ -688,7 +688,7 @@ POST /api/admin/**              # réservé ADMIN
 POST /api/user/getList          # réservé ADMIN
 POST  /api/user/getUpdate/:id
 POST /api/user/update
-DELETE /api/user/delete
+POST /api/user/delete
 ```
 
 ---
