@@ -718,6 +718,10 @@ Logout
 - Back : POST /api/auth/logout renvoyant un message de confirmation.
 - Front : logout(showConfirm) (message sur logout explicite, silencieux sur logout forcé par l'interceptor).
 
+### Process 
+
+![image](./Ticket_auth.drawio.png)
+
 ### Clé JWT
 
 La clé JWT est générée aléatoirement côté Java via JJWT, encodée en Base64, puis stockée en configuration. Pour HS256, la clé doit faire au moins 256 bits.
