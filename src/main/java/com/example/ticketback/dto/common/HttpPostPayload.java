@@ -6,8 +6,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * Payload générique des endpoints
  *
- * @example create
+ * @example create d'un utilisateur
  {
+ *  "params": {
+ *       "dataType": "create",
+ *       "routeParam": null,
+ *       "paramList": null
+ *   },
  *   "data": {
  *     "username": "admin",
  *     "email": "admin@ticketflow.local",
@@ -15,13 +20,39 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *   }
  * }
  *
- * @example update
+ * @example update d'un utilisateur
  * {
+ *  "params": {
+ *       "dataType": "update",
+ *       "routeParam": 5,
+ *       "paramList": null
+ *   },
  *   "data": {
- *     "id": 1,
- *     "username": "admin",
  *     "email": "admin@ticketflow.local"
  *   }
+ * }
+ *
+ * @example liste des tickets "DONE" par position ascendante
+ * {
+ *     "params": {
+ *         "dataType": "liste",
+ *         "routeParam": null,
+ *         "paramList": {
+ *             "pageNum": 1,
+ *             "nb": 10,
+ *             "filters": {
+ *                 "fieldName": "status",
+ *                 "fieldOperator": "EQUAL",
+ *                 "value": "DONE"
+ *             },
+ *             "sort": [
+ *                  {
+ *                      field: "position",
+ *                      way: "ASC"
+ *                  }
+ *             ]
+ *         }
+ *     }
  * }
 
  * @param params BaseHttpParams

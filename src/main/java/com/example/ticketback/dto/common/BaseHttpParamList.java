@@ -1,7 +1,10 @@
 package com.example.ticketback.dto.common;
 
 
+import com.example.ticketback.dto.common.paramlist.ParamFilter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.data.domain.Sort;
+
 
 /**
  * Paramètres génériques pour les appels de liste
@@ -14,11 +17,15 @@ public record BaseHttpParamList(
         @Schema(description = "Numéro de page")
         Integer pageNum,
         @Schema(description = "Nombre d'items par page")
-        Integer nb
+        Integer nb,
+        @Schema(description = "filtres sur la requête", nullable = true)
+        ParamFilter filters,
+        @Schema(description = "Tri", nullable = true)
+        Sort sort
 ) {
 
     public static BaseHttpParamList defaultValue() {
-        return new BaseHttpParamList(0, 30);
+        return new BaseHttpParamList(0, 30, null, null);
     }
 
     /**
@@ -33,5 +40,13 @@ public record BaseHttpParamList(
      */
     public int resolvedNb() {
         return nb != null ? nb : 30;
+    }
+
+    public ParamFilter resolvedFilter() {
+        return filters;
+    }
+
+    public Sort resolvedSort() {
+        return sort;
     }
 }

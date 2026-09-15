@@ -4,7 +4,6 @@ import com.example.ticketback.domain.enums.UserRole;
 import com.example.ticketback.domain.enums.UserStatus;
 import com.example.ticketback.dto.common.MetaField;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.models.media.DateTimeSchema;
 
 import java.time.LocalDateTime;
 
@@ -31,7 +30,7 @@ public record UserListDto(
         )
         String email,
 
-        @MetaField(libelle = "Rôle", defaultvalue = "USER")
+        @MetaField(libelle = "Rôle", defaultValue = "USER")
         @Schema(
                 description = "role utilisateur",
                 example = "ADMIN"

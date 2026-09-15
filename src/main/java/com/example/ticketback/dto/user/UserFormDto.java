@@ -28,7 +28,7 @@ public record UserFormDto(
         )
         String email,
 
-        @MetaField(libelle = "Rôle", defaultvalue = "USER")
+        @MetaField(libelle = "Rôle", defaultValue = "USER")
         @Schema(
                 description = "role utilisateur",
                 example = "ADMIN"
@@ -54,4 +54,7 @@ public record UserFormDto(
         )
         String avatar
 ) {
+        public static UserFormDto empty() {
+                return new UserFormDto(null,null,null,null,null, null);
+        }
 }

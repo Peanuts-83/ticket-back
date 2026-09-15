@@ -30,7 +30,7 @@ public class UserServiceSecurityTest {
     @MockitoBean
     private UserRepository userRepository;
 
-    private final BaseHttpParams params = new BaseHttpParams(null, null, null, null);
+    private final BaseHttpParams params = new BaseHttpParams(null, null, null);
 
     @Test
     @WithMockUser(roles = "ADMIN")

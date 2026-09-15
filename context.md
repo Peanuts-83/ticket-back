@@ -465,9 +465,9 @@ public enum ViewDataType {
 
     @JsonCreator
     public static ViewDataType fromValue(String value) {
-        for (ViewDataType type : values()) {
-            if (type.value.equalsIgnoreCase(value)) {
-                return type;
+        for (ViewDataType b_type : values()) {
+            if (b_type.value.equalsIgnoreCase(value)) {
+                return b_type;
             }
         }
         throw new IllegalArgumentException("Unknown ViewDataType: " + value);
@@ -865,41 +865,184 @@ FAIT.
 
 ## 19. Feature tickets côté back
 
-À venir.
+### Ressource
 
-Ressource cible :
+Base : `/api/tickets` (constantes dans `ApiRoutes.Ticket`).
 
-```text
-/api/ticket
+| Endpoint | Entrée | Sortie |
+|---|---|---|
+| `POST /getList` | `BaseHttpParams` (body, nullable) | `HttpPostResult<List<TicketDto>>` |
+| `POST /metaCreate` | — | `HttpPostResult<TicketFormDto>` + `metas` |
+| `POST /create` | `HttpPostPayload<TicketFormDto>` | `HttpPostResult<TicketDto>` |
+| `POST /update` | `HttpPostPayload<TicketFormDto>` | `HttpPostResult<TicketDto>` |
+| `POST /getStats` | — | `HttpPostResult<TicketStatsDto>` |
+
+`nb` de `HttpPostResult` est le **nombre de lignes de la page**, pas le total : le front s'en sert
+(`BaseListComponent.doIncrementPageNum`) pour savoir s'il reste une page. Avec un total, la condition
+resterait vraie indéfiniment et le front boucle. C'est aussi pourquoi `getList` renvoie une `List` et
+non une `Page` : `HttpPostResult` n'a pas de place pour les métadonnées de pagination, et les
+exposer ferait fuiter `pageable` / `totalPages` dans le contrat.
+
+### Statuts
+
+```java
+public enum TicketStatus { NEW, CONCEPTION, ACTIVE, REVIEW, DONE }
 ```
 
-Endpoints selon convention :
+L'**ordre de déclaration est l'ordre des colonnes** du kanban : le front n'a pas de liste parallèle à
+maintenir, et `MetaBuilder` dérive automatiquement les valeurs pour `metaCreate` (tout champ de type
+enum devient un `TYPE_SELECT` avec ses constantes).
 
-```http
-POST  /api/ticket/get/{id}
-POST /api/ticket/getList
-POST  /api/ticket/getUpdate/{id}
-POST /api/ticket/update
-POST  /api/ticket/metaCreate
-POST /api/ticket/create
-POST /api/ticket/getListFor/{id}
-POST  /api/ticket/metaCreateFor/{id}
-```
+### Entité
 
-Fonctionnalités futures :
+`Ticket` porte `id`, `title`, `description`, `status`, plus :
 
-- Création ticket.
-- Liste paginée.
-- Détail ticket.
-- Modification ticket.
-- Statuts.
-- Priorités.
-- Assignation user.
-- Historique / commentaires plus tard.
+| Champ | Rôle |
+|---|---|
+| `createdAt` | `@CreationTimestamp`, non modifiable |
+| `updatedAt` | `@UpdateTimestamp` — **ne pas le poser à la main**, il est écrasé au flush |
+| `closedAt` | date de clôture, **pilotée par le service uniquement** |
+| `position` | rang dans la colonne kanban |
+
+`closedAt` est hors de portée du client volontairement : s'il était déclaratif, la courbe
+« clôturés » du tableau de bord deviendrait invérifiable.
+
+### Règles de gestion de `update`
+
+- Statut absent du payload → on conserve l'existant (un `update` de titre n'envoie pas de statut).
+- Passage **vers** `DONE` → `closedAt = now()` ; sortie de `DONE` → `closedAt = null`.
+- Les champs absents du payload ne sont pas écrasés : un drag & drop n'envoie que
+  `{id, status, position}` et ne doit pas effacer titre et description.
+- `reorder(statut, ticket, index)` renumérote la colonne `0..n-1` en retirant puis réinsérant la
+  carte à l'index voulu, et compacte la colonne quittée. Sans cette renumérotation, poser
+  `position = 2` laisse la carte déjà à 2 en place et l'ordre entre les deux devient indéterminé.
+
+Deux comportements implicites mais volontaires dans `reorder` : `List.remove` fonctionne parce que
+JPA garantit **une seule instance par id dans une transaction** (l'objet renvoyé par la requête *est*
+le ticket modifié), et la colonne quittée est vue sans la carte parce qu'Hibernate flushe
+automatiquement avant une requête dérivée.
+
+### `getStats`
+
+`TicketStatsDto` : `total`, `pending`, `closed`, `progress`, `byStatus`, `serie` (30 jours).
+
+- **Deux requêtes seulement** : un `group by status`, et une requête plate `(createdAt, closedAt)`
+  sur la fenêtre. `total` / `closed` / `pending` se déduisent de `byStatus`.
+- **`EnumMap`, pas `HashMap`** : l'ordre de sérialisation JSON d'une `HashMap` d'enum est celui du
+  hachage, donc arbitraire — la légende et les parts du camembert sortiraient dans le désordre.
+- **Les 5 statuts sont pré-remplis à 0** et **les 30 jours sont tous produits**, trous compris : sans
+  ça le camembert perd des parts et la courbe interpole entre deux dates éloignées.
+- **Le regroupement par jour se fait en Java**, pas en JPQL : `function('date', …)` dépend du
+  dialecte et se comporterait différemment entre H2 (dev/tests) et PostgreSQL (prod).
+- Piège traité dans le comptage : la requête est un `OR` (`createdAt >= :date OR closedAt >= :date`),
+  donc un ticket créé il y a 90 jours mais clôturé hier remonte — et son `createdAt` ne doit **pas**
+  être compté dans la fenêtre.
 
 ---
 
-## 20. TODO priorisés back
+## 20. Filtres et tri génériques de liste
+
+### Modèle transporté
+
+Dans `dto/common/paramlist/`. `BaseHttpParamList` porte, à côté de `pageNum` / `nb`, un
+`ParamFilter` et un tri.
+
+```java
+public record ParamFilter(
+        String fieldName, Operator fieldOperator, Object value,   // feuille
+        List<ParamFilter> filterList, Combinator listCombinator   // groupe
+) { }
+```
+
+Un nœud est **soit une feuille, soit un groupe**, jamais les deux : l'invariant est validé dans le
+constructeur compact, donc un payload incohérent devient un 400 à la désérialisation plutôt qu'un
+filtre silencieusement ignoré.
+
+```json
+{
+  "paramList": {
+    "pageNum": 0, "nb": 30,
+    "filters": {
+      "listCombinator": "AND",
+      "filterList": [
+        { "fieldName": "status",    "fieldOperator": "IN",      "value": ["ACTIVE", "REVIEW"] },
+        { "fieldName": "createdAt", "fieldOperator": "BETWEEN", "value": ["2026-08-01T00:00:00", "2026-08-31T23:59:59"] }
+      ]
+    }
+  }
+}
+```
+
+Attention à la casse : Jackson y est sensible, `fieldname` serait ignoré.
+
+### Traduction — `ParamFilterTranslator`
+
+Le translator est le **seul** endroit qui connaît les opérateurs. Il produit une `Specification`
+consommée par `JpaSpecificationExecutor`, ce qui évite d'écrire une requête par combinaison de
+filtres.
+
+```text
+ParamFilter (DTO, aucune notion de JPA)
+   -> ParamFilterTranslator          switch sur Operator -> Predicate
+   -> Specification<T>
+   -> TicketRepository extends JpaSpecificationExecutor<Ticket>
+```
+
+Points structurants :
+
+- **`switch` sans `default`** sur `Operator` : ajouter un opérateur casse la compilation, ce qui est
+  le filet voulu sur une table de correspondance.
+- **`l_col` / `l_type`** : `root.get(fieldName)` renvoie une *référence de colonne* (rien n'est
+  évalué, ça deviendra `t1_0.status` en SQL) ; `getJavaType()` donne le type déclaré de l'attribut,
+  qui est la **cible de conversion**.
+- **Conversion obligatoire.** Un champ `Object value` est désérialisé par Jackson en `String`,
+  `Integer`, `Boolean` ou `ArrayList` — jamais en enum ni en `LocalDateTime`. Sans conversion,
+  `cb.equal(path, "DONE")` lève `Parameter value [DONE] did not match expected type [TicketStatus]`.
+  Le `ConversionService` (`DefaultFormattingConversionService`) couvre `String` → enum, → temporels,
+  → numériques sans écrire un seul convertisseur.
+- **`canConvert` ne valide pas la valeur**, seulement le couple de types : `String → LocalDateTime`
+  est toujours convertible, et c'est `convert` qui lève une `ConversionFailedException` sur
+  `"pas-une-date"`. Il faut donc **aussi** attraper `ConversionException`, sinon un filtre mal formé
+  ressort en 500 au lieu de 400.
+- **`ClassUtils.resolvePrimitiveIfNecessary`** sur le type de colonne : `Class.isInstance` renvoie
+  toujours `false` pour un primitif, et `position` est un `int`.
+- **Comparaisons d'ordre.** `CriteriaBuilder.between` / `lessThan` / … exigent
+  `Y extends Comparable<? super Y>`, que `Path<Object>` ne satisfait pas. Le cast doit passer par le
+  joker, `(Expression<Y>) (Expression<?>) col` — un cast direct depuis `Path<Object>` est refusé par
+  le compilateur (« inconvertible types »).
+- **Liste blanche.** `fieldName` est du texte libre venant du client : sans `authorizedFields()`, il
+  peut filtrer et trier sur n'importe quel attribut de l'entité, y compris ceux qu'on n'expose pas.
+  Un champ hors liste doit sortir en 400, pas en 500.
+- **`root.get()` ne traverse pas les relations** : `get("assignee.username")` lève une exception. Le
+  jour où `Ticket` aura un assigné, il faudra découper sur les points — et faire porter la liste
+  blanche sur le **chemin complet**, sinon on autorise implicitement toute l'entité liée.
+
+### Mutualisation — `BaseListService<E, D>`
+
+Chaque service de liste déclare ce qu'il expose, la mécanique est écrite une fois :
+
+```java
+protected abstract JpaSpecificationExecutor<E> executor();
+protected abstract Set<String> authorizedFields();
+protected abstract Sort defaultSort();
+protected abstract D toDto(E entity);
+```
+
+Deux contraintes :
+
+- **Constructeurs explicites**, pas de `@RequiredArgsConstructor` : sur une sous-classe, Lombok
+  génèrerait un appel à `super()` sans argument, qui n'existe pas.
+- **Un tri par défaut est obligatoire.** Sans `ORDER BY`, la pagination n'est pas déterministe — une
+  même ligne peut réapparaître ou disparaître entre deux pages, sur H2 comme sur PostgreSQL. Pour les
+  tickets, c'est `(status, position)`, ce qui rend aussi exploitables les rangs écrits par `reorder`.
+
+`Sort` de Spring Data ne peut pas être un champ de DTO (pas de constructeur sans argument, et ça
+ferait fuiter un type Spring Data dans le contrat) : le tri transite par un `ParamSort`
+(`fieldName` + `OrderWay`) converti en `Sort` dans le service, avec **la même liste blanche** que
+les filtres — un `ORDER BY` sur un champ non exposé pose le même problème qu'un `WHERE`.
+
+---
+## 21. TODO priorisés back
 
 ### TODO 1 — Faire démarrer proprement le back - DONE &#x2714; 
 
@@ -974,7 +1117,73 @@ Fonctionnalités futures :
 
 ---
 
-## 21. Décisions techniques actuelles
+### TODO 10 — Finaliser le translator de filtres — DONE &#x2714;
+
+Le fichier compilait déjà, mais quatre points donnaient un comportement faux à l'exécution
+(silencieux : pas d'erreur, juste de mauvais résultats ou un 500 au lieu d'un 400). Tous corrigés :
+
+- **Comparaisons scalaires.** Les cases `LESS_THAN` / `LESS_OR_EQUAL` / `GREATER_THAN` /
+  `GREATER_OR_EQUAL` passaient `valeurList(...)`, donc une **`List`**, là où `compare` attend un
+  scalaire. Le `(Y) a_v` la laissait passer (effacement de type) et l'échec survenait au binding
+  Hibernate. → elles appellent désormais `valeur(a_filter.value(), a_filter, l_type)`.
+- **Conversion via `valeur()` partout.** `EQUAL` / `NOT_EQUAL` et `valeurList` appelaient
+  `conversionService.convert` en direct, sans garde de nullité ni capture de `ConversionException` :
+  une valeur mal formée ressortait en **500** au lieu de 400, et un `null` produisait un `= null` qui
+  ne matche jamais (filtre silencieusement vide). → `EQUAL`/`NOT_EQUAL` reçoivent la **valeur brute**
+  (`Object`) passée à `valeur()`, qui gère conversion + erreurs ; `valeurList` mappe chaque élément
+  par `valeur(v, a_filter, a_type)`. **Piège évité** : ne pas caster la valeur en `String` ni
+  l'échapper pour ces opérateurs — un champ numérique arrive en `Integer` (cast → 500) et
+  l'échappement `LIKE` n'a de sens que pour un `LIKE`.
+- **`STARTS_WITH` / `ENDS_WITH` remis dans le bon sens.** `STARTS_WITH -> "%" + value` était un « se
+  termine par ». Le joker va **après** la valeur pour un début de chaîne (`value + "%"`), **avant**
+  pour une fin (`"%" + value`). Idem `NOT_STARTS_WITH` / `NOT_ENDS_WITH`.
+- **Jokers échappés.** Un `%` ou `_` envoyé par le client était interprété comme joker → balayage
+  complet de table. Un helper `textLike(...)` échappe la valeur **caractère par caractère** (chaque
+  char passé à `escapeLike`, ce qui évite le piège d'ordre d'échappement du `!` lui-même) avant de
+  concaténer les `%` de l'opérateur, et `like`/`notLike` passent le caractère d'échappement à
+  `cb.like(expr, motif, '!')`. L'échappement est **réservé à la famille `LIKE`**
+  (`LIKE`/`NOT_LIKE`/`STARTS_WITH`/`ENDS_WITH`/`NOT_*`) ; doc et code sont désormais alignés
+  (`escape '!'`).
+
+Points secondaires traités : `toSpecification` renvoie `Specification.unrestricted()` au lieu de
+`null` (Spring Data JPA 4.0 « does not accept null values since 4.0 ») ; `toPredicate` est passée
+`private` ; message d'erreur de `valeurList` corrigé (`fieldOperator()` en tête) ; cast redondant sur
+`l_collection` supprimé ; import `@Bean` inutile retiré.
+
+Reste ouvert (léger, non bloquant) : `textLike(null)` renvoie `""` → un `LIKE` sur valeur nulle
+matche toute la table au lieu de sortir en 400.
+
+---
+
+### TODO 11 — Brancher les listes sur `BaseListService`
+
+- Déplacer `BaseListService` de `dto/common/` vers `service/` (un service dans le package des DTO).
+- `TicketRepository extends JpaSpecificationExecutor<Ticket>`.
+- `TicketService` étend `BaseListService<Ticket, TicketDto>` et déclare `authorizedFields()`,
+  `defaultSort()`, `toDto()`, `executor()`.
+- Ajouter `ParamSort` (`fieldName` + `OrderWay`) et remplacer le champ `Sort` de `BaseHttpParamList`,
+  que Jackson ne sait pas désérialiser.
+- Trancher la convention `pageNum` : le front démarre à `signal(1)`, Spring est 0-based, et
+  `BaseHttpParamList.defaultValue()` vaut `0`. À décider une fois et à écrire dans les deux
+  `context.md`, sinon la première page est silencieusement sautée.
+
+---
+
+### TODO 12 — Tests de la feature tickets
+
+Aucun test ticket aujourd'hui (`src/test/` ne couvre que les users).
+
+- `TicketServiceTest` : complétion des statuts à 0 et des 30 jours, bascule `closedAt` dans les deux
+  sens, renumérotation de colonne par `reorder`, position de `create`.
+- `TicketControllerTest` : forme du `HttpPostResult` sur `getList` / `getStats`, `update` avec un body
+  `{params, data}`.
+- `ParamFilterTranslatorTest` : se teste bien en unitaire pour la traduction, et en `@DataJpaTest`
+  pour l'exécution réelle des prédicats (conversion d'enum et de dates, champ hors liste blanche en
+  400, `BETWEEN` à une seule borne en 400).
+
+---
+
+## 22. Décisions techniques actuelles
 
 | Sujet | Décision / orientation actuelle |
 |---|---|
@@ -987,10 +1196,21 @@ Fonctionnalités futures :
 | Endpoints | modèle action-based : get, getList, getUpdate, update, metaCreate, create |
 | Update/create | pas d’id dans l’URL, données dans `payload.data` |
 | Réponse API | `HttpPostResult<T>` |
-| Pagination | `BaseHttpParamList` avec `pageNum`, `nb` |
+| Pagination | `BaseHttpParamList` : `pageNum`, `nb` (convention 0-based / 1-based à trancher avec le front) |
+| Filtres de liste | `ParamFilter` récursif + enums `Operator` / `Combinator`, traduits en `Specification` par `ParamFilterTranslator` |
+| Tri de liste | `ParamSort` (`fieldName` + `OrderWay`) ; tri par défaut obligatoire, sinon pagination non déterministe |
+| Conversion des valeurs de filtre | `ConversionService` Spring, cible lue dans le métamodèle JPA (`Path.getJavaType()`) |
+| Champs filtrables | Liste blanche par entité (`authorizedFields()`), champ hors liste = 400 |
+| Mutualisation des listes | `BaseListService<E, D>` (pagination + filtres + mapping DTO) |
+| Java | 21 (`java.version`, qui pilote `maven.compiler.release`) |
+| Statuts tickets | `NEW` / `CONCEPTION` / `ACTIVE` / `REVIEW` / `DONE` — l'ordre de déclaration est l'ordre des colonnes kanban |
+| Dates des tickets | `LocalDateTime` partout ; `closedAt` piloté par le service, jamais par l'appelant |
+| Ordre kanban | `position` renumérotée 0..n-1 par `reorder()` à chaque déplacement |
+| Agrégats de stats | 2 requêtes, regroupement par jour en Java (dialecte-agnostique H2 / PostgreSQL) |
+| Sécurité fine | `@PreAuthorize` + bean `@userSecurity` ; `isAuthenticated()` sur les tickets (pas de notion de propriétaire) |
 | Auth | Spring Security + JWT à avancer |
 | Refresh token | à clarifier, probablement pas exposé au front |
-| Tests | à prévoir |
+| Tests | users couverts ; feature tickets et translator à couvrir |
 
 ---
 

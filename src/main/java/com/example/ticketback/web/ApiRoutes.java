@@ -57,6 +57,7 @@ public final class ApiRoutes {
         public static final String META_CREATE = "/metaCreate";
         public static final String CREATE      = "/create";
         public static final String DELETE      = "/delete";
+        public static final String STATS      = "/getStats";
 
         private Ticket() {
         }

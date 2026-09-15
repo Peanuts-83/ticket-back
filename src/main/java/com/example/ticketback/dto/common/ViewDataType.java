@@ -34,9 +34,9 @@ public enum ViewDataType {
         if (value == null || value.isBlank()) {
             return null;
         }
-        for (ViewDataType item : ViewDataType.values()) {
-            if (item.value.equals(value)) {
-                return item;
+        for (ViewDataType b_item : ViewDataType.values()) {
+            if (b_item.value.equals(value)) {
+                return b_item;
             }
         }
         throw new IllegalArgumentException("No enum constant for value " + value);

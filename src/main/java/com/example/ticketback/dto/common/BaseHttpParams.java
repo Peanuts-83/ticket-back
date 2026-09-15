@@ -11,13 +11,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
  */
 @Schema(description = "HttpParams pour toute requête")
 public record BaseHttpParams(
-        @Schema(description = "Identifiant du bean <String>")
-        String id,
+//        @Schema(description = "Identifiant du bean <String>")
+//        String id,
         @Schema(description = "type d'écran demandé")
         ViewDataType dataType,
-        @Schema(description = "id de référence <Long>")
+        @Schema(description = "id de référence <Long>", nullable = true)
         Long routeParam,
-        @Schema(description = "Paramètres de liste si besoin")
+        @Schema(description = "Paramètres de liste si besoin", nullable = true)
         BaseHttpParamList paramList
 ) {
 

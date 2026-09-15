@@ -31,7 +31,7 @@ public record UserDto (
         )
         String email,
 
-        @MetaField(libelle = "Rôle", defaultvalue = "USER")
+        @MetaField(libelle = "Rôle", defaultValue = "USER")
         @Schema(
                 description = "role utilisateur",
                 example = "ADMIN"

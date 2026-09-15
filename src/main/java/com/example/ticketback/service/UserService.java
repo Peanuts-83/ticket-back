@@ -8,12 +8,12 @@ import com.example.ticketback.dto.user.UserDto;
 import com.example.ticketback.dto.user.UserListDto;
 import com.example.ticketback.repository.UserRepository;
 import jakarta.annotation.Nullable;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -28,12 +28,14 @@ public class UserService {
     private final UserRepository userRepository;
 
     @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#id)")
+    @Transactional(readOnly = true)
     public UserDto get(Long id) {
         User user = findUserOrThrow(id);
         return toDto(user);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional(readOnly = true)
     public List<UserListDto> getList(@Nullable BaseHttpParams params) {
         Pageable pageable = params != null && params.paramList() != null ?
                 PageRequest.of(
@@ -54,7 +56,7 @@ public class UserService {
     }
 
     // TODO: prévoir un formulaire spécifique pour renouveler le pwd
-    @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#dto.id()")
+    @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#dto.id())")
     public UserDto update(UserFormDto dto) {
         if (dto == null || dto.id() == null) {
             throw new IllegalArgumentException("User id is required for update");
@@ -69,7 +71,7 @@ public class UserService {
 
     @PreAuthorize("permitAll")
     public UserFormDto getMetaCreate() {
-        return new UserFormDto(null, null, null, null, null, null);
+        return UserFormDto.empty();
     }
 
     @PreAuthorize("permitAll")

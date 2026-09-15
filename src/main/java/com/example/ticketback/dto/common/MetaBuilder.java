@@ -32,10 +32,10 @@ public final class MetaBuilder {
 
     private static Map<String, Meta> fromRecord(Class<?> recordClass) {
         Map<String, Meta> metas = new LinkedHashMap<>();
-        for (RecordComponent component : recordClass.getRecordComponents()) {
-            String fieldName = component.getName();
-            Class<?> fieldType = component.getType();
-            MetaField annotation = component.getAnnotation(MetaField.class);
+        for (RecordComponent b_component : recordClass.getRecordComponents()) {
+            String fieldName = b_component.getName();
+            Class<?> fieldType = b_component.getType();
+            MetaField annotation = b_component.getAnnotation(MetaField.class);
             metas.put(fieldName, buildMeta(fieldName, fieldType, annotation));
         }
         return metas;
@@ -44,13 +44,13 @@ public final class MetaBuilder {
 
     private static Map<String, Meta> fromFields(Class<?> modelClass) {
         Map<String, Meta> metas = new LinkedHashMap<>();
-        for (Field field : modelClass.getDeclaredFields()) {
-            if (shouldIgnoreField(field)) {
+        for (Field b_field : modelClass.getDeclaredFields()) {
+            if (shouldIgnoreField(b_field)) {
                 continue;
             }
-            String fieldName = field.getName();
-            Class<?> fieldType = field.getType();
-            MetaField annotation = field.getAnnotation(MetaField.class);
+            String fieldName = b_field.getName();
+            Class<?> fieldType = b_field.getType();
+            MetaField annotation = b_field.getAnnotation(MetaField.class);
             metas.put(fieldName, buildMeta(fieldName, fieldType, annotation));
         };
         return metas;
@@ -104,7 +104,7 @@ public final class MetaBuilder {
 
     private static Object resolveDefaultValue(String fieldName, MetaField annotation) {
         if (annotation != null) {
-            return annotation.defaultvalue();
+            return annotation.defaultValue();
         }
         return null;
     }

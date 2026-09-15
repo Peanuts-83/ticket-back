@@ -147,3 +147,30 @@ Implémentation de 2 config de sécurité: dev et prod.
 --- 
 
 ## Phase 9 - Connecter au front (en cours)
+### Feature tickets
+
+- **`TicketStatus`** ramené à 5 états dans l'ordre du flux kanban : `NEW`, `CONCEPTION`, `ACTIVE`, `REVIEW`, `DONE`. L'ordre de déclaration *est* l'ordre des colonnes, le front n'a pas de liste parallèle à maintenir.
+- **`Ticket`** enrichi : `createdAt` / `updatedAt` (`@CreationTimestamp` / `@UpdateTimestamp`), `closedAt` piloté par le service, `position` (rang dans la colonne).
+- **`data-dev.sql`** : 16 tickets étalés sur 30 jours, avec clôtures, pour que les graphes et le kanban aient de la matière. `ALTER TABLE … ALTER COLUMN id RESTART WITH 100` derrière les inserts en dur, sinon le premier `create` collisionne sur la clé primaire.
+- **Endpoints** alignés sur la convention maison : `getList` (body `BaseHttpParams`, réponse `HttpPostResult<List<TicketDto>>`), `metaCreate`, `create`, `update`, `getStats`.
+- **`getStats`** : une requête d'agrégat `group by status` + une requête plate sur les dates, regroupées par jour en Java (`function('date', …)` est dépendant du dialecte et diffèrerait entre H2 et PostgreSQL). Les 5 statuts et les 30 jours sont complétés à zéro : sans ça, le camembert perd des parts et la courbe interpole entre deux dates éloignées.
+- **`update`** : `closedAt` posé au passage en `DONE` et remis à `null` en sortie, jamais fourni par l'appelant. `reorder()` renumérote la colonne 0..n-1 en retirant puis réinsérant la carte à l'index voulu, et compacte la colonne quittée — sans ça, deux cartes finissent au même rang et l'ordre devient indéterminé.
+- **`UserSecurity`** créé : le bean `@userSecurity` était référencé dans les `@PreAuthorize` de `UserService` sans exister nulle part. L'erreur ne se voyait pas car le `or` de SpEL court-circuite sur `hasRole('ADMIN')` — seul un `USER` déclenchait l'évaluation.
+- **`java.version` passé à 21** : la propriété était à 17, et `spring-boot-starter-parent` en dérive `maven.compiler.release`, qui **prime sur** les `<source>`/`<target>` du plugin compiler. Le code compilait donc contre l'API de Java 17.
+
+### Filtres et tri génériques de liste
+
+- **Modèle de filtre** dans `dto/common/paramlist/` : `ParamFilter` récursif (feuille `fieldName`/`fieldOperator`/`value`, **ou** groupe `filterList`/`listCombinator`, jamais les deux — invariant validé dans le constructeur compact), enums `Operator` (20 opérateurs) et `Combinator`.
+- **`ParamFilterTranslator`** : traduit un `ParamFilter` en `Specification` JPA. Un seul `switch` sur `Operator`, sans `default`, pour que l'ajout d'un opérateur casse la compilation au lieu de passer inaperçu.
+- **Conversion des valeurs** par le `ConversionService` de Spring (`String` → enum, → `LocalDateTime`, → `Long`…), pilotée par le type Java de la colonne lu dans le métamodèle (`Path.getJavaType()`) : le JSON n'arrive qu'en `String` / `Integer` / `ArrayList`.
+- **Liste blanche par entité** (`authorizedFields()`) : `fieldName` vient du client, sans elle il pourrait filtrer et trier sur n'importe quel attribut de l'entité.
+- **`BaseListService`** : mutualise pagination + filtres + mapping DTO. Constructeurs explicites (pas de `@RequiredArgsConstructor`) car Lombok génèrerait un `super()` sans argument dans les sous-classes.
+
+---
+
+## Phase 10 - Écrans Accueil et Tickets (à venir)
+
+- ~~Finaliser le translator de filtres (cf. TODO 10 du `context.md`).~~ **FAIT** — les 4 bugs runtime corrigés (comparaisons scalaires, conversion via `valeur()` partout, `STARTS_WITH`/`ENDS_WITH` remis dans le bon sens, jokers `LIKE` échappés) + `toSpecification` renvoie `Specification.unrestricted()` au lieu de `null`.
+- Brancher `getList` sur `BaseListService` : tri par défaut `(status, position)` — sans `ORDER BY`, la pagination n'est pas déterministe.
+- Trancher la convention `pageNum` : le front démarre à 1, Spring est 0-based.
+- Tests `TicketServiceTest` / `TicketControllerTest` / `ParamFilterTranslatorTest` : la feature tickets n'a aujourd'hui aucun test.
