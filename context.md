@@ -1150,8 +1150,12 @@ Points secondaires traités : `toSpecification` renvoie `Specification.unrestric
 `private` ; message d'erreur de `valeurList` corrigé (`fieldOperator()` en tête) ; cast redondant sur
 `l_collection` supprimé ; import `@Bean` inutile retiré.
 
-Reste ouvert (léger, non bloquant) : `textLike(null)` renvoie `""` → un `LIKE` sur valeur nulle
-matche toute la table au lieu de sortir en 400.
+Garde sur les opérateurs textuels : `textLike(a_filter)` valide la valeur par un
+`instanceof String` — qui couvre d'un coup `null` **et** un mauvais type (un nombre arrive en
+`Integer`) — et refuse la chaîne vide. Une valeur absente, non textuelle ou vide sur un `LIKE`
+sort donc en **400**, au lieu d'un `LIKE '%%'` qui matchait toute la table (null) ou d'une
+`ClassCastException` en 500 (mauvais type). Le cast `(String)` sur les call sites a disparu au
+passage.
 
 ---
 
