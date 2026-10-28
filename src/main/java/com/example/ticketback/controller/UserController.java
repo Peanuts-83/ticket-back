@@ -1,6 +1,7 @@
 package com.example.ticketback.controller;
 
 import com.example.ticketback.dto.common.BaseHttpParams;
+import com.example.ticketback.dto.common.HttpPostPayload;
 import com.example.ticketback.dto.common.HttpPostResult;
 import com.example.ticketback.dto.user.UserDto;
 import com.example.ticketback.dto.user.UserFormDto;
@@ -75,8 +76,8 @@ public class UserController {
                     )
             )
     )
-    public HttpPostResult<List<UserListDto>> getList(@RequestBody(required = false) BaseHttpParams params) {
-        List<UserListDto> users = userService.getList(params);
+    public HttpPostResult<List<UserListDto>> getList(@RequestBody(required = false) HttpPostPayload<Void> payload) {
+        List<UserListDto> users = userService.getList(payload != null ? payload.params() : null);
         return HttpPostResult.ofList(users, (long) users.size());
     }
 

@@ -1,6 +1,5 @@
 package com.example.ticketback.controller;
 
-import com.example.ticketback.dto.common.BaseHttpParams;
 import com.example.ticketback.dto.common.HttpPostPayload;
 import com.example.ticketback.dto.common.HttpPostResult;
 import com.example.ticketback.dto.ticket.TicketDto;
@@ -21,8 +20,8 @@ public class TicketController {
     private final TicketService ticketService;
 
     @PostMapping(ApiRoutes.Ticket.GET_LIST)
-    public HttpPostResult<List<TicketDto>> getList(@RequestBody(required = false) BaseHttpParams params) {
-        List<TicketDto> tickets = ticketService.getList(params);
+    public HttpPostResult<List<TicketDto>> getList(@RequestBody(required = false) HttpPostPayload<Void> payload) {
+        List<TicketDto> tickets = ticketService.getList(payload != null ? payload.params() : null);
         return HttpPostResult.ofList(tickets, (long) tickets.size());
     }
 

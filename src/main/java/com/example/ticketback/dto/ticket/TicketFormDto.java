@@ -30,8 +30,8 @@ public record TicketFormDto(
         Ticket result = new Ticket();
         result.setTitle(title);
         result.setDescription(description);
-        result.setStatus(status);
-        result.setPosition(position);
+        result.setStatus(status != null ? status : TicketStatus.NEW);
+        result.setPosition(position != null ? position : 0);
         return result;
     }
 

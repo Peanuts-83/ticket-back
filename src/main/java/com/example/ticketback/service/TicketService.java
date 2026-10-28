@@ -1,6 +1,8 @@
 package com.example.ticketback.service;
 
 import com.example.ticketback.dto.common.BaseHttpParams;
+import com.example.ticketback.dto.common.BaseListService;
+import com.example.ticketback.dto.common.paramlist.ParamFilterTranslator;
 import com.example.ticketback.dto.ticket.PointJour;
 import com.example.ticketback.dto.ticket.TicketDto;
 import com.example.ticketback.domain.entity.Ticket;
@@ -11,10 +13,8 @@ import com.example.ticketback.repository.DatesTicket;
 import com.example.ticketback.repository.StatusCount;
 import com.example.ticketback.repository.TicketRepository;
 import jakarta.annotation.Nullable;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -27,26 +27,41 @@ import java.util.*;
 
 @Service
 @Transactional
-@RequiredArgsConstructor
-public class TicketService {
+public class TicketService extends BaseListService<Ticket, TicketDto> {
     private static final int NB_JOURS_STAT = 30;
 
     private final TicketRepository ticketRepository;
 
+    public TicketService(TicketRepository ticketRepository, ParamFilterTranslator translator) {
+        super(translator);
+        this.ticketRepository = ticketRepository;
+    }
+
+
+    @Override
+    protected JpaSpecificationExecutor<Ticket> executor() {
+        return ticketRepository;
+    }
+
+    @Override
+    protected Set<String> authorizedFields() {
+        return Set.of("id", "title", "status", "position", "createdAt", "updatedAt", "closedAt");
+    }
+
+    @Override
+    protected Sort defaultSort() {
+        return Sort.by("status", "position");
+    }
+
+    @Override
+    protected TicketDto toDto(Ticket entity) {
+        return TicketDto.fromEntity(entity);
+    }
+
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     public List<TicketDto> getList(@Nullable BaseHttpParams params) {
-        Pageable pageable = params != null && params.paramList() != null ?
-                PageRequest.of(
-                        params.resolvedparamList().resolvedPageNum(),
-                        params.resolvedparamList().resolvedNb()
-                ) : Pageable.unpaged();
-
-        Page<Ticket> ticketList = ticketRepository.findAll(pageable);
-        return ticketList
-                .stream()
-                .map(TicketDto::fromEntity)
-                .toList();
+        return getListWithFilters(params);
     }
 
     @PreAuthorize("isAuthenticated()")

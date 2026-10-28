@@ -2,8 +2,12 @@ package com.example.ticketback.dto.common;
 
 
 import com.example.ticketback.dto.common.paramlist.ParamFilter;
+import com.example.ticketback.dto.common.paramlist.ParamSort;
+import com.example.ticketback.dto.common.paramlist.constants.OrderWay;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.data.domain.Sort;
+
+import java.util.List;
 
 
 /**
@@ -21,7 +25,7 @@ public record BaseHttpParamList(
         @Schema(description = "filtres sur la requête", nullable = true)
         ParamFilter filters,
         @Schema(description = "Tri", nullable = true)
-        Sort sort
+        List<ParamSort> sorts
 ) {
 
     public static BaseHttpParamList defaultValue() {
@@ -30,9 +34,10 @@ public record BaseHttpParamList(
 
     /**
      * @return la page demandée ou 0
+     * Front est 1-based / Back est 0-based
      */
     public int resolvedPageNum() {
-        return pageNum != null ? pageNum : 0;
+        return pageNum != null ? pageNum - 1 : 0;
     }
 
     /**
@@ -46,7 +51,14 @@ public record BaseHttpParamList(
         return filters;
     }
 
-    public Sort resolvedSort() {
-        return sort;
+    public Sort resolvedSort(Sort defaultSort) {
+        if (sorts == null || sorts.isEmpty()) {
+            return defaultSort;
+        }
+        return Sort.by(sorts.stream()
+                .map(s -> new Sort.Order(
+                        s.orderWay() == OrderWay.DESC ? Sort.Direction.DESC : Sort.Direction.ASC, s.fieldName()))
+                .toList());
+
     }
 }

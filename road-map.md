@@ -171,6 +171,6 @@ Implémentation de 2 config de sécurité: dev et prod.
 ## Phase 10 - Écrans Accueil et Tickets (à venir)
 
 - ~~Finaliser le translator de filtres (cf. TODO 10 du `context.md`).~~ **FAIT** — les 4 bugs runtime corrigés (comparaisons scalaires, conversion via `valeur()` partout, `STARTS_WITH`/`ENDS_WITH` remis dans le bon sens, jokers `LIKE` échappés) + `toSpecification` renvoie `Specification.unrestricted()` au lieu de `null`.
-- Brancher `getList` sur `BaseListService` : tri par défaut `(status, position)` — sans `ORDER BY`, la pagination n'est pas déterministe.
-- Trancher la convention `pageNum` : le front démarre à 1, Spring est 0-based.
-- Tests `TicketServiceTest` / `TicketControllerTest` / `ParamFilterTranslatorTest` : la feature tickets n'a aujourd'hui aucun test.
+- ~~Brancher `getList` sur `BaseListService` : tri par défaut obligatoire — sans `ORDER BY`, la pagination n'est pas déterministe.~~ **FAIT** — `TicketService extends BaseListService`, `getList` délègue à `getListWithFilters` ; `ParamSort` + `List<ParamSort> sorts` (Jackson ne désérialise pas `Sort`) ; champs de tri validés contre la liste blanche.
+- ~~Trancher la convention `pageNum` : le front démarre à 1, Spring est 0-based.~~ **FAIT** — front 1-based, `resolvedPageNum()` fait `-1`.
+- Tests `TicketServiceTest` / `TicketControllerTest` / `ParamFilterTranslatorTest` : la feature tickets n'a aujourd'hui aucun test. *(reste — TODO 12)*

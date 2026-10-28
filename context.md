@@ -1159,17 +1159,26 @@ passage.
 
 ---
 
-### TODO 11 — Brancher les listes sur `BaseListService`
+### TODO 11 — Brancher les listes sur `BaseListService` — DONE &#x2714;
 
-- Déplacer `BaseListService` de `dto/common/` vers `service/` (un service dans le package des DTO).
-- `TicketRepository extends JpaSpecificationExecutor<Ticket>`.
-- `TicketService` étend `BaseListService<Ticket, TicketDto>` et déclare `authorizedFields()`,
-  `defaultSort()`, `toDto()`, `executor()`.
-- Ajouter `ParamSort` (`fieldName` + `OrderWay`) et remplacer le champ `Sort` de `BaseHttpParamList`,
-  que Jackson ne sait pas désérialiser.
-- Trancher la convention `pageNum` : le front démarre à `signal(1)`, Spring est 0-based, et
-  `BaseHttpParamList.defaultValue()` vaut `0`. À décider une fois et à écrire dans les deux
-  `context.md`, sinon la première page est silencieusement sautée.
+- **`TicketService extends BaseListService<Ticket, TicketDto>`** : constructeur **explicite** (pas de
+  `@RequiredArgsConstructor`, qui générerait un `super()` sans argument dans la sous-classe), implémente
+  `executor()`, `authorizedFields()`, `defaultSort()`, `toDto()`. `getList` délègue à
+  `getListWithFilters(params)` — pagination + filtres + liste blanche + tri mutualisés, plus de
+  `PageRequest` / `findAll` manuel.
+- **`TicketRepository extends JpaSpecificationExecutor<Ticket>`** (déjà en place).
+- **`ParamSort`** (`fieldName` + `OrderWay`) ajouté ; le champ `Sort` de `BaseHttpParamList` remplacé
+  par **`List<ParamSort> sorts`** — Jackson ne sait pas désérialiser
+  `org.springframework.data.domain.Sort`. `resolvedSort(defaultSort)` reconstruit le `Sort` Spring et
+  retombe sur le tri par défaut si aucun tri n'est fourni.
+- **Tri par défaut obligatoire** (`defaultSort()`), sinon pagination non déterministe. Les champs de
+  tri reçus du client sont validés contre `authorizedFields()` (400 sinon), au même titre que les
+  champs de filtre (`validateSortFields`).
+- **Convention `pageNum` tranchée** : le front démarre à `signal(1)`, `resolvedPageNum()` fait `-1`
+  (Spring 0-based). `defaultValue()` reste à `0`.
+
+> Restant mineur : `BaseListService` est resté dans `dto/common/` (déplacement vers `service/` non
+> effectué). À part ça, le point est terminé.
 
 ---
 
@@ -1200,12 +1209,12 @@ Aucun test ticket aujourd'hui (`src/test/` ne couvre que les users).
 | Endpoints | modèle action-based : get, getList, getUpdate, update, metaCreate, create |
 | Update/create | pas d’id dans l’URL, données dans `payload.data` |
 | Réponse API | `HttpPostResult<T>` |
-| Pagination | `BaseHttpParamList` : `pageNum`, `nb` (convention 0-based / 1-based à trancher avec le front) |
+| Pagination | `BaseHttpParamList` : `pageNum`, `nb`. Convention **tranchée** : front 1-based, `resolvedPageNum()` fait `-1` (Spring 0-based) |
 | Filtres de liste | `ParamFilter` récursif + enums `Operator` / `Combinator`, traduits en `Specification` par `ParamFilterTranslator` |
 | Tri de liste | `ParamSort` (`fieldName` + `OrderWay`) ; tri par défaut obligatoire, sinon pagination non déterministe |
 | Conversion des valeurs de filtre | `ConversionService` Spring, cible lue dans le métamodèle JPA (`Path.getJavaType()`) |
 | Champs filtrables | Liste blanche par entité (`authorizedFields()`), champ hors liste = 400 |
-| Mutualisation des listes | `BaseListService<E, D>` (pagination + filtres + mapping DTO) |
+| Mutualisation des listes | `BaseListService<E, D>` (pagination + filtres + tri + mapping DTO) ; branché sur `TicketService` via `getListWithFilters` |
 | Java | 21 (`java.version`, qui pilote `maven.compiler.release`) |
 | Statuts tickets | `NEW` / `CONCEPTION` / `ACTIVE` / `REVIEW` / `DONE` — l'ordre de déclaration est l'ordre des colonnes kanban |
 | Dates des tickets | `LocalDateTime` partout ; `closedAt` piloté par le service, jamais par l'appelant |

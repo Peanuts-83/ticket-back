@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum ViewDataType {
     LISTE("liste"),
     UPDATE("update"),
-    CREATE("CREATE"),
+    CREATE("create"),
     DELETE("delete");
 
     private final String value;
